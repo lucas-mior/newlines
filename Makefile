@@ -5,7 +5,7 @@ srcdir = .
 PREFIX = /usr/local
 MANPREFIX = $(PREFIX)/share/man
 
-cflags = -O3 -std=gnu99 -Wall -Wpedantic -Wextra $(CFLAGS)
+cflags = -O3 -std=gnu99 -Wall -Wpedantic -Wextra -s $(CFLAGS)
 
 ldlibs = $(LDLIBS)
 
@@ -20,7 +20,7 @@ $(V).SILENT:
 
 new_lines: $(objs)
 	@echo "LINK $@"
-	$(CC) $(LDFLAGS) -o $@ $(objs) $(ldlibs)
+	$(CC) $(cflags) $(LDFLAGS) -o $@ $(objs) $(ldlibs)
 
 $(objs): Makefile
 
