@@ -12,7 +12,7 @@ static inline void usage(FILE *stream) {
 
 int main(int argc, char *argv[]) {
     progname = argv[0];
-    int n;
+    int n = 0;
     int i = 0;
 
     if (argc <= 1 || argc >= 3)
