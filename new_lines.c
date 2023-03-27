@@ -3,11 +3,11 @@
 #include <stdlib.h>
 
 char *progname;
-static inline void usage(FILE *stream) {
+void usage(FILE *stream) {
     fprintf(stream, "usage: %s [ <n> | h ]\n"
                     "<n> : number of new lines to print\n"
                     " h  : prints this help message to stdout\n", progname);
-    exit(0);
+    exit((int) stream != stdout);
 }
 
 int main(int argc, char *argv[]) {
