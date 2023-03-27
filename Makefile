@@ -1,5 +1,3 @@
-version = 1.0
-
 srcdir = .
 
 PREFIX = /usr/local
@@ -33,8 +31,7 @@ install: all
 	cp new_lines $(DESTDIR)$(PREFIX)/bin/
 	chmod 755 $(DESTDIR)$(PREFIX)/bin/new_lines
 	mkdir -p $(DESTDIR)$(MANPREFIX)/man1
-	sed "s!PREFIX!$(PREFIX)!g; s!VERSION!$(version)!g" new_lines.1 \
-		>$(DESTDIR)$(MANPREFIX)/man1/new_lines.1
+	cp new_lines.1 $(DESTDIR)$(MANPREFIX)/man1/new_lines.1
 	chmod 644 $(DESTDIR)$(MANPREFIX)/man1/new_lines.1
 
 uninstall:
