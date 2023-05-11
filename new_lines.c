@@ -4,10 +4,9 @@
 
 char *progname;
 void usage(FILE *stream) {
-    fprintf(stream, "usage: %s [ <n> | h ]\n"
-                    "<n> : number of new lines to print\n"
-                    " h  : prints this help message to stdout\n", progname);
-    exit((int) stream != stdout);
+    fprintf(stream, "usage: %s <n>\n"
+                    "<n> : number of new lines to print\n", progname);
+    exit((int) (stream != stdout));
 }
 
 int main(int argc, char *argv[]) {
@@ -18,16 +17,7 @@ int main(int argc, char *argv[]) {
     if (argc <= 1 || argc >= 3)
         usage(stderr);
 
-    switch (argv[1][0]) {
-        case 'h':
-            usage(stdout);
-            break;
-        default:
-            n = atoi(argv[1]);
-            break;
-    }
-
-    if (n < 0)
+    if ((n = atoi(argv[1])) < 0)
         usage(stderr);
 
     while (++i <= n)
