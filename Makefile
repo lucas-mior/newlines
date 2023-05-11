@@ -27,7 +27,7 @@ all: new_lines
 .SUFFIXES: .c .o
 
 new_lines: $(objs)
-	$(CC) $(cflags) $(LDFLAGS) -o $@ $(objs) $(ldlibs)
+	$(CC) $(stripflag) $(cflags) $(LDFLAGS) -o $@ $(objs) $(ldlibs)
 
 $(objs): Makefile
 
