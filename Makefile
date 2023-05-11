@@ -3,9 +3,20 @@ srcdir = .
 PREFIX = /usr/local
 MANPREFIX = $(PREFIX)/share/man
 
-cflags = -O3 -std=gnu99 -Wall -Wpedantic -Wextra -s $(CFLAGS)
+CC = clang
+cflags = $(CFLAGS)
 
 ldlibs = $(LDLIBS)
+
+all: release
+
+release: cflags += -O2 -Weverything
+release: stripflag = -s
+release: new_lines
+
+debug: cflags += -g -Weverything
+debug: clean
+debug: new_lines
 
 objs = new_lines.o
 
