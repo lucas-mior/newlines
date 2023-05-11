@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
         usage(stderr);
 
     while (++i <= n)
-        (void) puts("");
+        (void) putchar('\n');
     return 0;
 }
 
