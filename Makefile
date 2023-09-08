@@ -4,17 +4,15 @@ PREFIX = /usr/local
 MANPREFIX = $(PREFIX)/share/man
 
 CC = clang
-cflags = $(CFLAGS)
 
 ldlibs = $(LDLIBS)
 
 all: release
 
-release: cflags += -O2 -Weverything
-release: stripflag = -s
+release: CFLAGS += -O2 -Weverything -Wno-unsafe-buffer-usage
 release: new_lines
 
-debug: cflags += -g -Weverything
+debug: CFLAGS += -g -Weverything -Wno-unsafe-buffer-usage
 debug: clean
 debug: new_lines
 
@@ -27,12 +25,12 @@ all: new_lines
 .SUFFIXES: .c .o
 
 new_lines: $(objs)
-	$(CC) $(stripflag) $(cflags) $(LDFLAGS) -o $@ $(objs) $(ldlibs)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(objs) $(ldlibs)
 
 $(objs): Makefile
 
 .c.o:
-	$(CC) $(cflags) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
 	rm -f *.o new_lines
