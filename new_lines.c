@@ -1,13 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static char *progname;
 static void usage(FILE *) __attribute__((noreturn));
 
 int main(int argc, char *argv[]) {
     int n = 0;
     int i = 0;
-    progname = argv[0];
 
     if (argc <= 1 || argc >= 3)
         usage(stderr);
@@ -15,13 +13,15 @@ int main(int argc, char *argv[]) {
     if ((n = atoi(argv[1])) < 0)
         usage(stderr);
 
-    while (++i <= n)
+    while (i < n) {
+        i += 1;
         (void) putchar('\n');
+    }
     return 0;
 }
 
 void usage(FILE *stream) {
-    fprintf(stream, "usage: %s <n>\n"
-                    "<n> : number of new lines to print\n", progname);
+    fprintf(stream, "usage: new_lines <n>\n"
+                    "<n> : number of new lines to print\n");
     exit((int) (stream != stdout));
 }
