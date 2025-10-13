@@ -1,4 +1,4 @@
-// cc nolibc.c -o nolibc_cc.exe -nostdlib -static -g2 -O3 -Wall -Wextra -fno-stack-protector ; done
+// cc nolibc.c -o nolibc_cc.exe -nostdlib -static -g2 -O3 -Wall -Wextra -fno-stack-protector
 
 #include <sys/syscall.h>
 #include <unistd.h>
@@ -45,9 +45,16 @@ memset(void *dest, int c, size_t n) {
     return dest;
 }
 
+#define NEWLINES5 "\n\n\n\n\n"
+#define NEWLINES25 NEWLINES5 NEWLINES5 NEWLINES5 NEWLINES5 NEWLINES5
+#define NEWLINES100 NEWLINES25 NEWLINES25 NEWLINES25 NEWLINES25
+char newlines[] = {
+    NEWLINES100
+    NEWLINES100
+};
+
 int
 main(int argc, char **argv) {
-    char newlines[100] = {0};
     int n;
     if (argc < 2)
         return 1;
@@ -57,9 +64,6 @@ main(int argc, char **argv) {
         return 1;
     if (n > (int)(sizeof(newlines) - 1))
         n = (int)sizeof(newlines) - 1;
-
-    for (int i = 0; i < n; i++)
-        newlines[i] = '\n';
 
     syscall3(SYS_write, STDOUT_FILENO, newlines, n);
 
