@@ -33,7 +33,7 @@ syscall3(long n, long a1, void *a2, long a3) {
 
 static inline int __attribute__((always_inline)) atoi(const char *s);
 
-static inline int __attribute__((always_inline)) 
+int __attribute__((always_inline)) 
 atoi(const char *s) {
     int v = 0;
     while (*s >= '0' && *s <= '9') {
