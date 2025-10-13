@@ -14,7 +14,8 @@ __asm__(
     "   syscall\n"                // exit(%eax)
 );
 
-static long syscall3(long n, long a1, void *a2, long a3) {
+static long
+syscall3(long n, long a1, void *a2, long a3) {
     long ret;
     asm volatile("syscall"
                  : "=a"(ret)
@@ -23,7 +24,8 @@ static long syscall3(long n, long a1, void *a2, long a3) {
     return ret;
 }
 
-static int str_to_int(const char *s) {
+static int
+atoi(const char *s) {
     int v = 0;
     while (*s >= '0' && *s <= '9') {
         v = v * 10 + (*s - '0');
@@ -36,7 +38,7 @@ int main(int argc, char **argv) {
     if (argc < 2)
         return 1;
 
-    int n = str_to_int(argv[1]);
+    int n = atoi(argv[1]);
     if (n <= 0)
         return 1;
 
