@@ -4,6 +4,12 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
+#if defined(__GNUC__) || defined(__INTEL_COMPILER) || defined(__clang__)
+  #define UNLIKELY(x) __builtin_expect(x, 0)
+#else
+  #define UNLIKELY(x) (x)
+#endif
+
 __asm__(
     ".global _start\n"
     "_start:\n"
@@ -57,13 +63,13 @@ static char newlines[] = {
 int
 main(int argc, char **argv) {
     int n;
-    if (argc < 2)
+    if (UNLIKELY(argc < 2))
         return 1;
 
     n = atoi(argv[1]);
-    if (n <= 0)
+    if (UNLIKELY(n <= 0))
         return 1;
-    if (n > (int)(sizeof(newlines) - 1))
+    if (UNLIKELY(n > (int)(sizeof(newlines) - 1)))
         n = (int)(sizeof(newlines) - 1);
 
     syscall3(SYS_write, STDOUT_FILENO, newlines, n);
