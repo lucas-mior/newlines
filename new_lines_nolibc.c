@@ -36,16 +36,20 @@ atoi(const char *s) {
 
 int
 main(int argc, char **argv) {
+    char newlines[100] = {0};
     if (argc < 2)
         return 1;
 
     int n = atoi(argv[1]);
     if (n <= 0)
         return 1;
+    if (n > (int)(sizeof(newlines) - 1))
+        n = (int)sizeof(newlines) - 1;
 
-    static const char nl = '\n';
     for (int i = 0; i < n; i++)
-        syscall3(SYS_write, STDOUT_FILENO, (void *)&nl, 1);
+        newlines[i] = '\n';
+
+    syscall3(SYS_write, STDOUT_FILENO, newlines, n);
 
     return 0;
 }
