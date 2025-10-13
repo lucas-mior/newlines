@@ -1,2 +1,6 @@
 *.out
 new_lines
+tags
+.tags.vim
+newlines
+newlines_amd64

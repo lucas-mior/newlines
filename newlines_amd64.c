@@ -1,6 +1,3 @@
-// cc nolibc.c -o nolibc_cc.exe
-// -nostdlib -static -g2 -O3 -Wall -Wextra -fno-stack-protector
-
 #include <sys/syscall.h>
 #include <unistd.h>
 
