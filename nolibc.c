@@ -49,7 +49,7 @@ memset(void *dest, int c, size_t n) {
 #define NEWLINES5 "\n\n\n\n\n"
 #define NEWLINES25 NEWLINES5 NEWLINES5 NEWLINES5 NEWLINES5 NEWLINES5
 #define NEWLINES100 NEWLINES25 NEWLINES25 NEWLINES25 NEWLINES25
-char newlines[] = {
+static char newlines[] = {
     NEWLINES100
     NEWLINES100
 };
@@ -64,7 +64,7 @@ main(int argc, char **argv) {
     if (n <= 0)
         return 1;
     if (n > (int)(sizeof(newlines) - 1))
-        n = (int)sizeof(newlines) - 1;
+        n = (int)(sizeof(newlines) - 1);
 
     syscall3(SYS_write, STDOUT_FILENO, newlines, n);
 
