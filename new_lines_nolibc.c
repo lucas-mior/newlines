@@ -28,7 +28,7 @@ static int
 atoi(const char *s) {
     int v = 0;
     while (*s >= '0' && *s <= '9') {
-        v = v * 10 + (*s - '0');
+        v = v*10 + (*s - '0');
         s++;
     }
     return v;
