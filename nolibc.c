@@ -1,4 +1,4 @@
-// gcc -nostdlib -static -O2 -o newlines newlines.c
+// cc nolibc.c -o nolibc_cc.exe -nostdlib -static -g2 -O3 -Wall -Wextra -fno-stack-protector ; done
 
 #include <sys/syscall.h>
 #include <unistd.h>
@@ -14,7 +14,7 @@ __asm__(
     "   syscall\n"              // exit(%eax)
 );
 
-static long
+static inline long __attribute__((always_inline)) 
 syscall3(long n, long a1, void *a2, long a3) {
     long ret;
     asm volatile("syscall"
@@ -24,7 +24,9 @@ syscall3(long n, long a1, void *a2, long a3) {
     return ret;
 }
 
-static int
+static inline int __attribute__((always_inline)) atoi(const char *s);
+
+static inline int __attribute__((always_inline)) 
 atoi(const char *s) {
     int v = 0;
     while (*s >= '0' && *s <= '9') {
@@ -38,7 +40,7 @@ void *
 memset(void *dest, int c, size_t n) {
     char *p = dest;
     for (size_t i = 0; i < n; i += 1) {
-        p[i] = c;
+        p[i] = (char)c;
     }
     return dest;
 }
@@ -46,10 +48,11 @@ memset(void *dest, int c, size_t n) {
 int
 main(int argc, char **argv) {
     char newlines[100] = {0};
+    int n;
     if (argc < 2)
         return 1;
 
-    int n = atoi(argv[1]);
+    n = atoi(argv[1]);
     if (n <= 0)
         return 1;
     if (n > (int)(sizeof(newlines) - 1))
