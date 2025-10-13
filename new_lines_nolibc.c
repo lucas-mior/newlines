@@ -6,12 +6,12 @@
 __asm__(
     ".global _start\n"
     "_start:\n"
-    "   movl  (%rsp), %edi\n"     // argc -> %edi
-    "   lea   8(%rsp), %rsi\n"    // argv -> %rsi
-    "   call  main\n"             // call main(argc, argv)
-    "   movl  %eax, %edi\n"       // exit code -> %edi
-    "   movl  $60, %eax\n"        // SYS_exit
-    "   syscall\n"                // exit(%eax)
+    "   movl  (%rsp), %edi\n"   // argc -> %edi
+    "   lea   8(%rsp), %rsi\n"  // argv -> %rsi
+    "   call  main\n"           // call main(argc, argv)
+    "   movl  %eax, %edi\n"     // exit code -> %edi
+    "   movl  $60, %eax\n"      // SYS_exit
+    "   syscall\n"              // exit(%eax)
 );
 
 static long
