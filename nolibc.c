@@ -1,14 +1,14 @@
 #if !defined(NOLIBC_C)
 #define NOLIBC_C
 
+#define const
+
 #include <sys/syscall.h>
 #define getcwd getcwd_from_libc_is_horrible
 #include <unistd.h>
 #undef getcwd
 #include <stdlib.h>
 #include <stdio.h>
-
-#define const
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_nolibc 1
