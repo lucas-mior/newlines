@@ -249,7 +249,7 @@ fstat(int fd, void *statbuf) {
 }
 
 int
-pipe(int *pipefd) {
+pipe(int pipefd[2]) {
     return syscall1(SYS_pipe, (long)pipefd);
 }
 
