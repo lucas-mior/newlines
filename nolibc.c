@@ -233,12 +233,36 @@ rename(char *oldpath, char *newpath) {
     return syscall2(SYS_rename, (long)oldpath, (long)newpath);
 }
 
+int
+access(char *pathname, int mode) {
+    return syscall2(SYS_access, (long)pathname, mode);
+}
+
+int
+chmod(char *pathname, int mode) {
+    return syscall2(SYS_chmod, (long)pathname, mode);
+}
+
+int
+fstat(int fd, void *statbuf) {
+    return syscall2(SYS_fstat, fd, (long)statbuf);
+}
+
+int
+pipe(int *pipefd) {
+    return syscall1(SYS_pipe, (long)pipefd);
+}
+
+int
+execve(char *pathname, char **argv, char **envp) {
+    return syscall3(SYS_execve, (long)pathname, (long)argv, (long)envp);
+}
+
 // TODO: syscalls
 // _llseek
 // _newselect
 // accept                      
 // accept4
-// access
 // acct
 // add_key
 // adjtimex
@@ -248,7 +272,6 @@ rename(char *oldpath, char *newpath) {
 // bpf
 // capget
 // capset
-// chmod
 // chown                      
 // chown32
 // chroot
@@ -272,7 +295,6 @@ rename(char *oldpath, char *newpath) {
 // epoll_wait
 // eventfd
 // eventfd2
-// execve
 // execveat
 // exit_group
 // faccessat
@@ -301,7 +323,6 @@ rename(char *oldpath, char *newpath) {
 // fsmount
 // fsopen
 // fspick
-// fstat
 // fstat64
 // fstatat64
 // fstatfs
@@ -440,7 +461,6 @@ rename(char *oldpath, char *newpath) {
 // pidfd_getfd
 // pidfd_send_signal
 // pidfd_open
-// pipe
 // pipe2
 // pivot_root
 // pkey_alloc
@@ -882,6 +902,71 @@ main(void) {
 
         unlink_return_value = unlink(new_file_name);
         if (unlink_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char *dir_name = ".";
+        long access_return_value = access(dir_name, 0);
+
+        if (access_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char *file_name = "dummy_chmod_file.txt";
+        long fd = open(file_name, 66, 0666);
+        long chmod_return_value = 0;
+        long unlink_return_value = 0;
+
+        if (fd < 0) {
+            return 1;
+        }
+
+        close(fd);
+
+        chmod_return_value = chmod(file_name, 0777);
+        if (chmod_return_value < 0) {
+            unlink(file_name);
+            return 1;
+        }
+
+        unlink_return_value = unlink(file_name);
+        if (unlink_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char stat_buffer[144] = {0};
+        long fstat_return_value = fstat(0, stat_buffer);
+
+        if (fstat_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        int pipe_fds[2] = {-1, -1};
+        long pipe_return_value = pipe(pipe_fds);
+
+        if (pipe_return_value < 0) {
+            return 1;
+        }
+
+        close(pipe_fds[0]);
+        close(pipe_fds[1]);
+    }
+
+    {
+        char *invalid_path = "/invalid_exec_path_12345";
+        char *argv[1] = {0};
+        char *envp[1] = {0};
+        long execve_return_value = execve(invalid_path, argv, envp);
+
+        if (execve_return_value >= 0) {
             return 1;
         }
     }
