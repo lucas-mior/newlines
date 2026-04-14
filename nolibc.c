@@ -163,6 +163,11 @@ rmdir(const char *pathname) {
     return syscall1(SYS_rmdir, (long)pathname);
 }
 
+int
+unlink(const char *pathname) {
+    return syscall1(SYS_unlink, (long)pathname);
+}
+
 // TODO: syscalls
 // _llseek
 // _newselect
@@ -539,7 +544,6 @@ rmdir(const char *pathname) {
 // umount
 // umount2
 // uname
-// unlink
 // unlinkat
 // unshare
 // uselib
@@ -567,7 +571,7 @@ int
 main(void) {
     {
         long process_id = syscall0(SYS_getpid);
-        long kill_return_value;
+        long kill_return_value = 0;
 
         if (process_id < 0) {
             return 1;
@@ -580,66 +584,104 @@ main(void) {
     }
 
     {
-        long close_return_value = syscall1(SYS_close, -1);
-        if (close_return_value >= 0) {
+        long brk_return_value = brk((void *)0);
+
+        if (brk_return_value < 0) {
             return 1;
         }
     }
 
     {
-        char read_buffer[1];
-        long read_return_value = read(-1, read_buffer, 1);
-        
-        if (read_return_value >= 0) {
+        char *dir_name = "dummy_test_dir";
+        long mkdir_return_value = mkdir(dir_name, 0777);
+
+        if (mkdir_return_value < 0) {
             return 1;
         }
     }
 
     {
-        long mmap_return_value = mmap(0, 4096, 3, 0x22, -1, 0);
-        
+        char *dir_name = "dummy_test_dir";
+        long chdir_return_value = chdir(dir_name);
+
+        if (chdir_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char *file_name = "dummy_file.txt";
+        long fd = open(file_name, 66, 0666);
+        char write_buffer[5] = {'t', 'e', 's', 't', '\n'};
+        long write_success = 0;
+        long lseek_return_value = 0;
+        char read_buffer[5] = {0};
+        long read_success = 0;
+        long mmap_return_value = 0;
+        char *mapped_memory = 0;
+        long munmap_return_value = 0;
+        long close_return_value = 0;
+        long unlink_return_value = 0;
+
+        if (fd < 0) {
+            return 1;
+        }
+
+        write_success = write(fd, write_buffer, 5);
+        if (write_success < 0) {
+            return 1;
+        }
+
+        lseek_return_value = lseek(fd, 0, 0);
+        if (lseek_return_value < 0) {
+            return 1;
+        }
+
+        read_success = read(fd, read_buffer, 5);
+        if (read_success < 0) {
+            return 1;
+        }
+
+        mmap_return_value = mmap((void *)0, 4096, 1, 1, fd, 0);
         if (mmap_return_value < 0) {
             return 1;
         }
 
-        syscall2(SYS_munmap, mmap_return_value, 4096);
-    }
+        mapped_memory = (char *)mmap_return_value;
+        if (mapped_memory[0] != 't') {
+            return 1;
+        }
 
-    {
-        char write_buffer[1];
-        long write_return_value;
+        munmap_return_value = munmap((void *)mmap_return_value, 4096);
+        if (munmap_return_value < 0) {
+            return 1;
+        }
 
-        write_buffer[0] = '\n';
-        write_return_value = write(-1, write_buffer, 1);
-        
-        if (write_return_value >= 0) {
+        close_return_value = close(fd);
+        if (close_return_value < 0) {
+            return 1;
+        }
+
+        unlink_return_value = unlink(file_name);
+        if (unlink_return_value < 0) {
             return 1;
         }
     }
 
     {
-        char *invalid_path = "/invalid_nonexistent_path_12345";
-        long chdir_return_value = chdir(invalid_path);
-        
-        if (chdir_return_value >= 0) {
+        char *parent_dir = "..";
+        long chdir_return_value = chdir(parent_dir);
+
+        if (chdir_return_value < 0) {
             return 1;
         }
     }
 
     {
-        char *invalid_path = "";
-        long mkdir_return_value = mkdir(invalid_path, 0777);
-        
-        if (mkdir_return_value >= 0) {
-            return 1;
-        }
-    }
+        char *dir_name = "dummy_test_dir";
+        long rmdir_return_value = rmdir(dir_name);
 
-    {
-        char *invalid_path = "";
-        long rmdir_return_value = rmdir(invalid_path);
-        
-        if (rmdir_return_value >= 0) {
+        if (rmdir_return_value < 0) {
             return 1;
         }
     }
