@@ -226,6 +226,6 @@ main(void) {
 
     return 0;
 }
-#endif
+#endif /* TESTING_nolibc */
 
-#endif
+#endif /* NOLIBC_C */
