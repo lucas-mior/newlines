@@ -4,9 +4,9 @@
 #define const
 
 #include <sys/syscall.h>
-#define getcwd getcwd_from_libc_is_horrible
+#include <sys/stat.h>
+#include <sys/mman.h>
 #include <unistd.h>
-#undef getcwd
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -138,18 +138,18 @@ lseek(int file_descriptor, long offset, int whence) {
     return syscall3(SYS_lseek, file_descriptor, offset, whence);
 }
 
-static inline long
-mmap(void *address, long length, long protection, long flags, long file_descriptor, long offset) {
-    return syscall6(SYS_mmap, (long)address, length, protection, flags, file_descriptor, offset);
+void *
+mmap(void *address, size_t length, int protection, int flags, int file_descriptor, long offset) {
+    return (void *)syscall6(SYS_mmap, (long)address, length, protection, flags, file_descriptor, offset);
 }
 
-static inline long __attribute__((always_inline))
-munmap(void *address, long length) {
-    return syscall2(SYS_munmap, (long)address, length);
+int
+munmap(void *address, size_t length) {
+    return syscall2(SYS_munmap, (long)address, (long)length);
 }
 
-static inline long __attribute__((always_inline))
-mprotect(void *address, long length, long protection) {
+int
+mprotect(void *address, size_t length, int protection) {
     return syscall3(SYS_mprotect, (long)address, length, protection);
 }
 
@@ -164,7 +164,7 @@ chdir(char *path) {
 }
 
 int
-mkdir(char *pathname, long mode) {
+mkdir(char *pathname, mode_t mode) {
     return syscall2(SYS_mkdir, (long)pathname, mode);
 }
 
@@ -239,12 +239,12 @@ access(char *pathname, int mode) {
 }
 
 int
-chmod(char *pathname, int mode) {
+chmod(char *pathname, mode_t mode) {
     return syscall2(SYS_chmod, (long)pathname, mode);
 }
 
 int
-fstat(int fd, void *statbuf) {
+fstat(int fd, struct stat *statbuf) {
     return syscall2(SYS_fstat, fd, (long)statbuf);
 }
 
@@ -259,7 +259,7 @@ execve(char *pathname, char **argv, char **envp) {
 }
 
 int
-stat(char *pathname, void *statbuf) {
+stat(char *pathname, struct stat *statbuf) {
     return syscall2(SYS_stat, (long)pathname, (long)statbuf);
 }
 
@@ -269,7 +269,7 @@ stat64(char *pathname, void *statbuf) {
 }
 
 int
-lstat(char *pathname, void *statbuf) {
+lstat(char *pathname, struct stat *statbuf) {
     return syscall2(SYS_lstat, (long)pathname, (long)statbuf);
 }
 
@@ -740,7 +740,7 @@ main(void) {
         long lseek_return_value = 0;
         char read_buffer[5] = {0};
         long read_success = 0;
-        long mmap_return_value = 0;
+        void *mmap_return_value = 0;
         char *mapped_memory = 0;
         long munmap_return_value = 0;
         long close_return_value = 0;
@@ -766,7 +766,7 @@ main(void) {
         }
 
         mmap_return_value = mmap((void *)0, 4096, 1, 1, fd, 0);
-        if (mmap_return_value < 0) {
+        if (mmap_return_value == MAP_FAILED) {
             return 1;
         }
 
@@ -774,6 +774,8 @@ main(void) {
         if (mapped_memory[0] != 't') {
             return 1;
         }
+
+        mprotect(mapped_memory, 4096, PROT_READ|PROT_WRITE);
 
         munmap_return_value = munmap((void *)mmap_return_value, 4096);
         if (munmap_return_value < 0) {
@@ -989,7 +991,7 @@ main(void) {
 
     {
         struct stat stat_buffer = {0};
-        long fstat_return_value = fstat(0, stat_buffer);
+        long fstat_return_value = fstat(0, &stat_buffer);
 
         if (fstat_return_value < 0) {
             return 1;
@@ -1022,7 +1024,7 @@ main(void) {
     {
         struct stat stat_buffer = {0};
         char *dir_name = ".";
-        long stat_return_value = stat(dir_name, stat_buffer);
+        long stat_return_value = stat(dir_name, &stat_buffer);
 
         if (stat_return_value < 0) {
             return 1;
@@ -1032,7 +1034,7 @@ main(void) {
     {
         struct stat stat_buffer = {0};
         char *dir_name = ".";
-        long stat64_return_value = stat64(dir_name, stat_buffer);
+        long stat64_return_value = stat64(dir_name, &stat_buffer);
 
         if (stat64_return_value < 0) {
             return 1;
@@ -1042,7 +1044,7 @@ main(void) {
     {
         struct stat stat_buffer = {0};
         char *dir_name = ".";
-        long lstat_return_value = lstat(dir_name, stat_buffer);
+        long lstat_return_value = lstat(dir_name, &stat_buffer);
 
         if (lstat_return_value < 0) {
             return 1;
@@ -1052,7 +1054,7 @@ main(void) {
     {
         struct stat stat_buffer = {0};
         char *dir_name = ".";
-        long lstat64_return_value = lstat64(dir_name, stat_buffer);
+        long lstat64_return_value = lstat64(dir_name, &stat_buffer);
 
         if (lstat64_return_value < 0) {
             return 1;
@@ -1061,7 +1063,7 @@ main(void) {
 
     {
         struct stat stat_buffer = {0};
-        long fstat64_return_value = fstat64(0, stat_buffer);
+        long fstat64_return_value = fstat64(0, &stat_buffer);
 
         if (fstat64_return_value < 0) {
             return 1;
@@ -1109,7 +1111,7 @@ main(void) {
     {
         struct stat stat_buffer = {0};
         char *dir_name = ".";
-        long newfstatat_return_value = newfstatat(-100, dir_name, stat_buffer, 0);
+        long newfstatat_return_value = newfstatat(-100, dir_name, &stat_buffer, 0);
 
         if (newfstatat_return_value < 0) {
             return 1;
@@ -1119,7 +1121,7 @@ main(void) {
     {
         struct stat stat_buffer = {0};
         char *dir_name = ".";
-        long fstatat64_return_value = fstatat64(-100, dir_name, stat_buffer, 0);
+        long fstatat64_return_value = fstatat64(-100, dir_name, &stat_buffer, 0);
 
         if (fstatat64_return_value < 0) {
             return 1;
