@@ -988,7 +988,7 @@ main(void) {
     }
 
     {
-        char stat_buffer[144] = {0};
+        struct stat stat_buffer = {0};
         long fstat_return_value = fstat(0, stat_buffer);
 
         if (fstat_return_value < 0) {
@@ -1020,7 +1020,7 @@ main(void) {
     }
 
     {
-        char stat_buffer[144] = {0};
+        struct stat stat_buffer = {0};
         char *dir_name = ".";
         long stat_return_value = stat(dir_name, stat_buffer);
 
@@ -1030,7 +1030,7 @@ main(void) {
     }
 
     {
-        char stat_buffer[144] = {0};
+        struct stat stat_buffer = {0};
         char *dir_name = ".";
         long stat64_return_value = stat64(dir_name, stat_buffer);
 
@@ -1040,7 +1040,7 @@ main(void) {
     }
 
     {
-        char stat_buffer[144] = {0};
+        struct stat stat_buffer = {0};
         char *dir_name = ".";
         long lstat_return_value = lstat(dir_name, stat_buffer);
 
@@ -1050,7 +1050,7 @@ main(void) {
     }
 
     {
-        char stat_buffer[144] = {0};
+        struct stat stat_buffer = {0};
         char *dir_name = ".";
         long lstat64_return_value = lstat64(dir_name, stat_buffer);
 
@@ -1060,7 +1060,7 @@ main(void) {
     }
 
     {
-        char stat_buffer[144] = {0};
+        struct stat stat_buffer = {0};
         long fstat64_return_value = fstat64(0, stat_buffer);
 
         if (fstat64_return_value < 0) {
@@ -1107,7 +1107,7 @@ main(void) {
     }
 
     {
-        char stat_buffer[144] = {0};
+        struct stat stat_buffer = {0};
         char *dir_name = ".";
         long newfstatat_return_value = newfstatat(-100, dir_name, stat_buffer, 0);
 
@@ -1117,7 +1117,7 @@ main(void) {
     }
 
     {
-        char stat_buffer[144] = {0};
+        struct stat stat_buffer = {0};
         char *dir_name = ".";
         long fstatat64_return_value = fstatat64(-100, dir_name, stat_buffer, 0);
 
