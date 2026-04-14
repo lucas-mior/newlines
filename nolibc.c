@@ -243,12 +243,12 @@ fstatat64(int dirfd, char *pathname, struct stat *statbuf, int flags) {
 }
 
 int
-statx(int dirfd, char *pathname, int flags, unsigned int mask, void *statxbuf) {
+statx(int dirfd, char *pathname, int flags, uint mask, void *statxbuf) {
     return syscall5(SYS_statx, dirfd, (long)pathname, flags, mask, (long)statxbuf);
 }
 
 uint
-alarm(unsigned int seconds) {
+alarm(uint seconds) {
     return syscall1(SYS_alarm, seconds);
 }
 
