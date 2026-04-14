@@ -596,7 +596,7 @@ main(void) {
     }
 
     {
-        long mmap_return_value = syscall6(SYS_mmap, 0, 4096, 3, 0x22, -1, 0);
+        long mmap_return_value = mmap(0, 4096, 3, 0x22, -1, 0);
         
         if (mmap_return_value < 0) {
             return 1;
