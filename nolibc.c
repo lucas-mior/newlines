@@ -1,3 +1,6 @@
+#if !defined(NOLIBC_C)
+#define NOLIBC_C
+
 #include <sys/syscall.h>
 #include <unistd.h>
 
@@ -21,3 +24,4 @@ syscall3(long n, long a1, void *a2, long a3) {
     return ret;
 }
 
+#endif
