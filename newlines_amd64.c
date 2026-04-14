@@ -48,7 +48,7 @@ main(int argc, char **argv) {
         n = (int)(sizeof(newlines) - 1);
     }
 
-    syscall3(SYS_write, STDOUT_FILENO, newlines, n);
+    syscall3(SYS_write, STDOUT_FILENO, (long)newlines, n);
 
     return 0;
 }
