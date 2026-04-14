@@ -193,7 +193,7 @@ stat(char *pathname, struct stat *statbuf) {
 }
 
 int
-stat64(char *pathname, void *statbuf) {
+stat64(char *pathname, struct stat *statbuf) {
     return syscall2(SYS_stat, (long)pathname, (long)statbuf);
 }
 
@@ -203,12 +203,12 @@ lstat(char *pathname, struct stat *statbuf) {
 }
 
 int
-lstat64(char *pathname, void *statbuf) {
+lstat64(char *pathname, struct stat *statbuf) {
     return syscall2(SYS_lstat, (long)pathname, (long)statbuf);
 }
 
 int
-fstat64(int fd, void *statbuf) {
+fstat64(int fd, struct stat *statbuf) {
     return syscall2(SYS_fstat, fd, (long)statbuf);
 }
 
@@ -233,12 +233,12 @@ fstatfs64(int fd, void *buf) {
 }
 
 int
-newfstatat(int dirfd, char *pathname, void *statbuf, int flags) {
+newfstatat(int dirfd, char *pathname, struct stat *statbuf, int flags) {
     return syscall4(SYS_newfstatat, dirfd, (long)pathname, (long)statbuf, flags);
 }
 
 int
-fstatat64(int dirfd, char *pathname, void *statbuf, int flags) {
+fstatat64(int dirfd, char *pathname, struct stat *statbuf, int flags) {
     return syscall4(SYS_newfstatat, dirfd, (long)pathname, (long)statbuf, flags);
 }
 
