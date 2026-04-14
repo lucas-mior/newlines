@@ -4,6 +4,8 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
+#if defined(__x86_64__)
+
 __asm__(".global _start\n"
         "_start:\n"
         "   movl  (%rsp), %edi\n"   // argc -> %edi
@@ -92,5 +94,9 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
                  : "rcx", "r11", "memory");
     return ret;
 }
+
+#else
+#error "Only x86-64 linux is supported"
+#endif
 
 #endif
