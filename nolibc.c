@@ -2,9 +2,13 @@
 #define NOLIBC_C
 
 #include <sys/syscall.h>
+#define getcwd getcwd_from_libc_is_horrible
 #include <unistd.h>
+#undef getcwd
 #include <stdlib.h>
 #include <stdio.h>
+
+#define const
 
 #if defined(__x86_64__)
 
@@ -109,7 +113,7 @@ read(int file_descriptor, void *buffer, size_t count) {
 }
 
 ssize_t
-write(int file_descriptor, const void *buffer, size_t count) {
+write(int file_descriptor, void *buffer, size_t count) {
     return syscall3(SYS_write, file_descriptor, (long)buffer, count);
 }
 
@@ -149,7 +153,7 @@ brk(void *address) {
 }
 
 int
-chdir(const char *path) {
+chdir(char *path) {
     return syscall1(SYS_chdir, (long)path);
 }
 
@@ -159,12 +163,12 @@ mkdir(char *pathname, long mode) {
 }
 
 int
-rmdir(const char *pathname) {
+rmdir(char *pathname) {
     return syscall1(SYS_rmdir, (long)pathname);
 }
 
 int
-unlink(const char *pathname) {
+unlink(char *pathname) {
     return syscall1(SYS_unlink, (long)pathname);
 }
 
@@ -191,6 +195,36 @@ fork(void) {
 int
 vfork(void) {
     return syscall0(SYS_vfork);
+}
+
+int
+wait4(int pid, int *wstatus, int options, void *rusage) {
+    return syscall4(SYS_wait4, pid, (long)wstatus, options, (long)rusage);
+}
+
+int
+waitpid(int pid, int *wstatus, int options) {
+    return syscall4(SYS_wait4, pid, (long)wstatus, options, 0);
+}
+
+int
+wait(int *wstatus) {
+    return syscall4(SYS_wait4, -1, (long)wstatus, 0, 0);
+}
+
+int
+waitid(int which, int pid, void *infop, int options, void *ru) {
+    return syscall5(SYS_waitid, which, pid, (long)infop, options, (long)ru);
+}
+
+int
+getcwd2(char *buf, size_t size) {
+    return syscall2(SYS_getcwd, (long)buf, size);
+}
+
+int
+rename(char *oldpath, char *newpath) {
+    return syscall2(SYS_rename, (long)oldpath, (long)newpath);
 }
 
 // TODO: syscalls
@@ -275,7 +309,6 @@ vfork(void) {
 // get_robust_list
 // get_thread_area
 // getcpu
-// getcwd
 // getdents
 // getdents64
 // getegid
@@ -435,7 +468,6 @@ vfork(void) {
 // recvmsg                        
 // recvmmsg
 // removexattr
-// rename
 // renameat
 // renameat2
 // request_key
@@ -573,20 +605,16 @@ vfork(void) {
 // utime
 // utimensat
 // utimes
-// vfork
 // vhangup
 // vm86
 // vmsplice
-// wait4
-// waitid
-// waitpid
 // writev
 
 #else
 #error "Only x86-64 linux is supported"
 #endif
 
-// flags: -nostdlib -static -fno-stack-protector -g2 -O3 -Wall -Wextra
+// flags: -fpermissive -nostdlib -static -fno-stack-protector -g2 -O3 -Wall -Wextra
 #if TESTING_nolibc
 int
 main(void) {
@@ -758,6 +786,97 @@ main(void) {
 
         if (vfork_return_value == 0) {
             exit(0);
+        }
+    }
+
+    {
+        long child_pid = fork();
+        int wstatus = 0;
+        long wait_return_value = 0;
+
+        if (child_pid < 0) {
+            return 1;
+        }
+
+        if (child_pid == 0) {
+            exit(0);
+        }
+
+        wait_return_value = wait(&wstatus);
+        if (wait_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        long child_pid = fork();
+        int wstatus = 0;
+        long waitpid_return_value = 0;
+
+        if (child_pid < 0) {
+            return 1;
+        }
+
+        if (child_pid == 0) {
+            exit(0);
+        }
+
+        waitpid_return_value = waitpid((int)child_pid, &wstatus, 0);
+        if (waitpid_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        long child_pid = fork();
+        char siginfo_buffer[128];
+        long waitid_return_value = 0;
+
+        if (child_pid < 0) {
+            return 1;
+        }
+
+        if (child_pid == 0) {
+            exit(0);
+        }
+
+        waitid_return_value = waitid(1, (int)child_pid, siginfo_buffer, 4, (void *)0);
+        if (waitid_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char cwd_buffer[4096];
+        long getcwd_return_value = getcwd2(cwd_buffer, 4096);
+
+        if (getcwd_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char *old_file_name = "test_rename_old.txt";
+        char *new_file_name = "test_rename_new.txt";
+        long fd = open(old_file_name, 66, 0666);
+        long rename_return_value = 0;
+        long unlink_return_value = 0;
+
+        if (fd < 0) {
+            return 1;
+        }
+
+        close(fd);
+
+        rename_return_value = rename(old_file_name, new_file_name);
+        if (rename_return_value < 0) {
+            unlink(old_file_name);
+            return 1;
+        }
+
+        unlink_return_value = unlink(new_file_name);
+        if (unlink_return_value < 0) {
+            return 1;
         }
     }
 

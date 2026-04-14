@@ -26,7 +26,7 @@ CFLAGS_AMD64="$CFLAGS_AMD64 -g2 -O3 -Wall -Wextra"
 set -x
 ctags --kinds-C=+l *.h *.c 2> /dev/null || true
 vtags.sed tags > .tags.vim 2> /dev/null || true
-$CC $CPPFLAGS $CFLAGS_AMD64 newlines_amd64.c -o newlines_amd64 || exit 1
+$CC $CPPFLAGS -Dconst= -fpermissive $CFLAGS_AMD64 newlines_amd64.c -o newlines_amd64 || exit 1
 # $CC $CPPFLAGS $CFLAGS       newlines.c       -o newlines || exit 1
 
 ./newlines_amd64 2
