@@ -160,7 +160,6 @@ brk(void *address) {
 // arch_prctl                  
 // bind                       
 // bpf
-// brk
 // capget
 // capset
 // chdir
@@ -175,7 +174,6 @@ brk(void *address) {
 // clock_settime
 // clone
 // clone3
-// close
 // close_range
 // connect                    
 // copy_file_range
@@ -194,7 +192,6 @@ brk(void *address) {
 // eventfd2
 // execve
 // execveat
-// exit
 // exit_group
 // faccessat
 // faccessat2
@@ -249,7 +246,7 @@ brk(void *address) {
 // getgroups
 // getgroups32
 // getitimer
-// getpeername           
+// getpeername            
 // getpgid
 // getpgrp
 // getpid
@@ -308,7 +305,6 @@ brk(void *address) {
 // llistxattr
 // lookup_dcookie
 // lremovexattr
-// lseek
 // lsetxattr
 // lstat
 // lstat64
@@ -326,13 +322,11 @@ brk(void *address) {
 // mlock
 // mlock2
 // mlockall
-// mmap
 // mmap2
 // modify_ldt
 // mount
 // move_mount
 // move_pages
-// mprotect
 // mq_getsetattr
 // mq_notify
 // mq_open
@@ -347,7 +341,6 @@ brk(void *address) {
 // msync
 // munlock
 // munlockall
-// munmap
 // name_to_handle_at
 // nanosleep
 // newfstatat                     
@@ -358,7 +351,6 @@ brk(void *address) {
 // oldstat
 // oldumount                     
 // olduname
-// open
 // open_by_handle_at
 // open_tree
 // openat
@@ -378,7 +370,7 @@ brk(void *address) {
 // poll
 // ppoll
 // prctl
-// pread64                          
+// pread64                         
 // preadv
 // preadv2
 // prlimit64
@@ -392,7 +384,6 @@ brk(void *address) {
 // pwritev2
 // quotactl
 // quotactl_fd
-// read
 // readahead
 // readdir
 // readlink
@@ -438,12 +429,12 @@ brk(void *address) {
 // semget                   
 // semop                   
 // semtimedop
-// send                   
+// send                    
 // sendfile
 // sendfile64
 // sendmmsg
-// sendmsg               
-// sendto               
+// sendmsg                
+// sendto                
 // set_mempolicy
 // set_robust_list
 // set_thread_area
@@ -493,7 +484,7 @@ brk(void *address) {
 // sigprocmask
 // sigreturn
 // sigsuspend
-// socket               
+// socket                
 // socketcall
 // socketpair          
 // splice
@@ -551,7 +542,6 @@ brk(void *address) {
 // wait4
 // waitid
 // waitpid
-// write
 // writev
 
 #else
