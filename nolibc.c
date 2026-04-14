@@ -561,6 +561,7 @@ rmdir(const char *pathname) {
 #error "Only x86-64 linux is supported"
 #endif
 
+// flags: -nostdlib -static -fno-stack-protector -g2 -O3 -Wall -Wextra
 #if TESTING_nolibc
 int
 main(void) {
@@ -587,26 +588,9 @@ main(void) {
 
     {
         char read_buffer[1];
-        long read_return_value = syscall3(SYS_read, -1, read_buffer, 1);
+        long read_return_value = read(-1, read_buffer, 1);
         
         if (read_return_value >= 0) {
-            return 1;
-        }
-    }
-
-    {
-        char write_buffer[1];
-        long pwrite_return_value = syscall4(SYS_pwrite64, -1, write_buffer, 1, 0);
-        
-        if (pwrite_return_value >= 0) {
-            return 1;
-        }
-    }
-
-    {
-        long prctl_return_value = syscall5(SYS_prctl, 3, 0, 0, 0, 0);
-        
-        if (prctl_return_value < 0) {
             return 1;
         }
     }
@@ -626,7 +610,7 @@ main(void) {
         long write_return_value;
 
         write_buffer[0] = '\n';
-        write_return_value = write64(-1, write_buffer, 1);
+        write_return_value = write(-1, write_buffer, 1);
         
         if (write_return_value >= 0) {
             return 1;

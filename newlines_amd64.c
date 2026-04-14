@@ -7,8 +7,6 @@
 #define UNLIKELY(x) (x)
 #endif
 
-static inline int __attribute__((always_inline)) atoi(const char *s);
-
 int __attribute__((always_inline))
 atoi(const char *s) {
     int v = 0;
