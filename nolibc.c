@@ -10,6 +10,12 @@
 
 #define const
 
+#if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
+#define TESTING_nolibc 1
+#elif !defined(TESTING_nolibc)
+#define TESTING_nolibc 0
+#endif
+
 #if defined(__x86_64__)
 
 __asm__(".global _start\n"
