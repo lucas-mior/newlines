@@ -247,6 +247,56 @@ statx(int dirfd, char *pathname, int flags, unsigned int mask, void *statxbuf) {
     return syscall5(SYS_statx, dirfd, (long)pathname, flags, mask, (long)statxbuf);
 }
 
+uint
+alarm(unsigned int seconds) {
+    return syscall1(SYS_alarm, seconds);
+}
+
+int
+chroot(char *path) {
+    return syscall1(SYS_chroot, (long)path);
+}
+
+int
+fchdir(int fd) {
+    return syscall1(SYS_fchdir, fd);
+}
+
+int
+fdatasync(int fd) {
+    return syscall1(SYS_fdatasync, fd);
+}
+
+int
+fsync(int fd) {
+    return syscall1(SYS_fsync, fd);
+}
+
+int
+getpid(void) {
+    return syscall0(SYS_getpid);
+}
+
+int
+getppid(void) {
+    return syscall0(SYS_getppid);
+}
+
+uint
+getuid(void) {
+    return syscall0(SYS_getuid);
+}
+
+uint
+geteuid(void) {
+    return syscall0(SYS_geteuid);
+}
+
+uint
+getgid(void) {
+    return syscall0(SYS_getgid);
+}
+
 static inline long __attribute__((always_inline))
 syscall0(long n) {
     long ret = 0;
@@ -334,7 +384,6 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // acct
 // add_key
 // adjtimex
-// alarm
 // arch_prctl                  
 // bind                       
 // bpf
@@ -342,7 +391,6 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // capset
 // chown                      
 // chown32
-// chroot
 // clock_adjtime
 // clock_getres
 // clock_gettime
@@ -372,7 +420,6 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // fallocate
 // fanotify_init
 // fanotify_mark
-// fchdir
 // fchmod
 // fchmodat
 // fchown
@@ -380,7 +427,6 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // fchownat
 // fcntl
 // fcntl64
-// fdatasync
 // fgetxattr
 // finit_module
 // flistxattr
@@ -391,7 +437,6 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // fsmount
 // fsopen
 // fspick
-// fsync
 // ftruncate
 // ftruncate64
 // futex
@@ -402,11 +447,8 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // getcpu
 // getdents
 // getdents64
-// getegid
 // getegid32
-// geteuid
 // geteuid32
-// getgid
 // getgid32
 // getgroups
 // getgroups32
@@ -414,8 +456,6 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // getpeername            
 // getpgid
 // getpgrp
-// getpid
-// getppid
 // getpriority
 // getrandom
 // getresgid
@@ -429,7 +469,6 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // getsockopt                     
 // gettid
 // gettimeofday
-// getuid
 // getuid32
 // getxattr
 // init_module
