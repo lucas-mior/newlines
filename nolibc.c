@@ -147,6 +147,22 @@ int __attribute__((always_inline))
 brk(void *address) {
     return syscall1(SYS_brk, (long)address);
 }
+
+int
+chdir(const char *path) {
+    return syscall1(SYS_chdir, (long)path);
+}
+
+int
+mkdir(char *pathname, long mode) {
+    return syscall2(SYS_mkdir, (long)pathname, mode);
+}
+
+int
+rmdir(const char *pathname) {
+    return syscall1(SYS_rmdir, (long)pathname);
+}
+
 // TODO: syscalls
 // _llseek
 // _newselect
@@ -162,7 +178,6 @@ brk(void *address) {
 // bpf
 // capget
 // capset
-// chdir
 // chmod
 // chown                      
 // chown32
@@ -315,7 +330,6 @@ brk(void *address) {
 // memfd_secret
 // migrate_pages
 // mincore
-// mkdir
 // mkdirat
 // mknod
 // mknodat
@@ -400,7 +414,6 @@ brk(void *address) {
 // renameat2
 // request_key
 // restart_syscall
-// rmdir
 // rseq
 // rt_sigaction
 // rt_sigpending
@@ -616,6 +629,33 @@ main(void) {
         write_return_value = write64(-1, write_buffer, 1);
         
         if (write_return_value >= 0) {
+            return 1;
+        }
+    }
+
+    {
+        char *invalid_path = "/invalid_nonexistent_path_12345";
+        long chdir_return_value = chdir(invalid_path);
+        
+        if (chdir_return_value >= 0) {
+            return 1;
+        }
+    }
+
+    {
+        char *invalid_path = "";
+        long mkdir_return_value = mkdir(invalid_path, 0777);
+        
+        if (mkdir_return_value >= 0) {
+            return 1;
+        }
+    }
+
+    {
+        char *invalid_path = "";
+        long rmdir_return_value = rmdir(invalid_path);
+        
+        if (rmdir_return_value >= 0) {
             return 1;
         }
     }
