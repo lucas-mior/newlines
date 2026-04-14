@@ -99,4 +99,11 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 #error "Only x86-64 linux is supported"
 #endif
 
+#if TESTING_nolibc
+int
+main(void) {
+    return 0;
+}
+#endif
+
 #endif
