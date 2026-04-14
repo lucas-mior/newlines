@@ -168,6 +168,31 @@ unlink(const char *pathname) {
     return syscall1(SYS_unlink, (long)pathname);
 }
 
+int
+dup(int oldfd) {
+    return syscall1(SYS_dup, oldfd);
+}
+
+int
+dup2(int oldfd, int newfd) {
+    return syscall2(SYS_dup2, oldfd, newfd);
+}
+
+int
+dup3(int oldfd, int newfd, int flags) {
+    return syscall3(SYS_dup3, oldfd, newfd, flags);
+}
+
+int
+fork(void) {
+    return syscall0(SYS_fork);
+}
+
+int
+vfork(void) {
+    return syscall0(SYS_vfork);
+}
+
 // TODO: syscalls
 // _llseek
 // _newselect
@@ -199,9 +224,6 @@ unlink(const char *pathname) {
 // copy_file_range
 // creat
 // delete_module
-// dup
-// dup2
-// dup3
 // epoll_create
 // epoll_create1
 // epoll_ctl
@@ -233,7 +255,6 @@ unlink(const char *pathname) {
 // finit_module
 // flistxattr
 // flock
-// fork
 // fremovexattr
 // fsconfig
 // fsetxattr
@@ -683,6 +704,60 @@ main(void) {
 
         if (rmdir_return_value < 0) {
             return 1;
+        }
+    }
+
+    {
+        long dup_return_value = dup(0);
+
+        if (dup_return_value < 0) {
+            return 1;
+        }
+
+        close(dup_return_value);
+    }
+
+    {
+        long dup2_return_value = dup2(0, 100);
+
+        if (dup2_return_value < 0) {
+            return 1;
+        }
+
+        close(dup2_return_value);
+    }
+
+    {
+        long dup3_return_value = dup3(0, 101, 0);
+
+        if (dup3_return_value < 0) {
+            return 1;
+        }
+
+        close(dup3_return_value);
+    }
+
+    {
+        long fork_return_value = fork();
+
+        if (fork_return_value < 0) {
+            return 1;
+        }
+
+        if (fork_return_value == 0) {
+            exit(0);
+        }
+    }
+
+    {
+        long vfork_return_value = vfork();
+
+        if (vfork_return_value < 0) {
+            return 1;
+        }
+
+        if (vfork_return_value == 0) {
+            exit(0);
         }
     }
 
