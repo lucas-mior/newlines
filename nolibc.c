@@ -36,85 +36,6 @@ static long syscall4(long n, long a1, long a2, long a3, long a4);
 static long syscall5(long n, long a1, long a2, long a3, long a4, long a5);
 static long syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6);
 
-static inline long __attribute__((always_inline))
-syscall0(long n) {
-    long ret = 0;
-    asm volatile("syscall"
-                 : "=a"(ret)
-                 : "a"(n)
-                 : "rcx", "r11", "memory");
-    return ret;
-}
-
-static inline long __attribute__((always_inline))
-syscall1(long n, long a1) {
-    long ret = 0;
-    asm volatile("syscall"
-                 : "=a"(ret)
-                 : "a"(n), "D"(a1)
-                 : "rcx", "r11", "memory");
-    return ret;
-}
-
-static inline long __attribute__((always_inline))
-syscall2(long n, long a1, long a2) {
-    long ret = 0;
-    asm volatile("syscall"
-                 : "=a"(ret)
-                 : "a"(n), "D"(a1), "S"(a2)
-                 : "rcx", "r11", "memory");
-    return ret;
-}
-
-static inline long __attribute__((always_inline))
-syscall3(long n, long a1, long a2, long a3) {
-    long ret;
-    asm volatile("syscall"
-                 : "=a"(ret)
-                 : "a"(n), "D"(a1), "S"(a2), "d"(a3)
-                 : "rcx", "r11", "memory");
-    return ret;
-}
-
-static inline long __attribute__((always_inline))
-syscall4(long n, long a1, long a2, long a3, long a4) {
-    long ret = 0;
-    register long r10 __asm__("r10") = a4;
-
-    asm volatile("syscall"
-                 : "=a"(ret)
-                 : "a"(n), "D"(a1), "S"(a2), "d"(a3), "r"(r10)
-                 : "rcx", "r11", "memory");
-    return ret;
-}
-
-static inline long __attribute__((always_inline))
-syscall5(long n, long a1, long a2, long a3, long a4, long a5) {
-    long ret = 0;
-    register long r10 __asm__("r10") = a4;
-    register long r8 __asm__("r8") = a5;
-
-    asm volatile("syscall"
-                 : "=a"(ret)
-                 : "a"(n), "D"(a1), "S"(a2), "d"(a3), "r"(r10), "r"(r8)
-                 : "rcx", "r11", "memory");
-    return ret;
-}
-
-static inline long __attribute__((always_inline))
-syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
-    long ret = 0;
-    register long r10 __asm__("r10") = a4;
-    register long r8 __asm__("r8") = a5;
-    register long r9 __asm__("r9") = a6;
-
-    asm volatile("syscall"
-                 : "=a"(ret)
-                 : "a"(n), "D"(a1), "S"(a2), "d"(a3), "r"(r10), "r"(r8), "r"(r9)
-                 : "rcx", "r11", "memory");
-    return ret;
-}
-
 void
 exit(int exit_code) {
     syscall1(SYS_exit, exit_code);
@@ -324,6 +245,85 @@ fstatat64(int dirfd, char *pathname, void *statbuf, int flags) {
 int
 statx(int dirfd, char *pathname, int flags, unsigned int mask, void *statxbuf) {
     return syscall5(SYS_statx, dirfd, (long)pathname, flags, mask, (long)statxbuf);
+}
+
+static inline long __attribute__((always_inline))
+syscall0(long n) {
+    long ret = 0;
+    asm volatile("syscall"
+                 : "=a"(ret)
+                 : "a"(n)
+                 : "rcx", "r11", "memory");
+    return ret;
+}
+
+static inline long __attribute__((always_inline))
+syscall1(long n, long a1) {
+    long ret = 0;
+    asm volatile("syscall"
+                 : "=a"(ret)
+                 : "a"(n), "D"(a1)
+                 : "rcx", "r11", "memory");
+    return ret;
+}
+
+static inline long __attribute__((always_inline))
+syscall2(long n, long a1, long a2) {
+    long ret = 0;
+    asm volatile("syscall"
+                 : "=a"(ret)
+                 : "a"(n), "D"(a1), "S"(a2)
+                 : "rcx", "r11", "memory");
+    return ret;
+}
+
+static inline long __attribute__((always_inline))
+syscall3(long n, long a1, long a2, long a3) {
+    long ret;
+    asm volatile("syscall"
+                 : "=a"(ret)
+                 : "a"(n), "D"(a1), "S"(a2), "d"(a3)
+                 : "rcx", "r11", "memory");
+    return ret;
+}
+
+static inline long __attribute__((always_inline))
+syscall4(long n, long a1, long a2, long a3, long a4) {
+    long ret = 0;
+    register long r10 __asm__("r10") = a4;
+
+    asm volatile("syscall"
+                 : "=a"(ret)
+                 : "a"(n), "D"(a1), "S"(a2), "d"(a3), "r"(r10)
+                 : "rcx", "r11", "memory");
+    return ret;
+}
+
+static inline long __attribute__((always_inline))
+syscall5(long n, long a1, long a2, long a3, long a4, long a5) {
+    long ret = 0;
+    register long r10 __asm__("r10") = a4;
+    register long r8 __asm__("r8") = a5;
+
+    asm volatile("syscall"
+                 : "=a"(ret)
+                 : "a"(n), "D"(a1), "S"(a2), "d"(a3), "r"(r10), "r"(r8)
+                 : "rcx", "r11", "memory");
+    return ret;
+}
+
+static inline long __attribute__((always_inline))
+syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
+    long ret = 0;
+    register long r10 __asm__("r10") = a4;
+    register long r8 __asm__("r8") = a5;
+    register long r9 __asm__("r9") = a6;
+
+    asm volatile("syscall"
+                 : "=a"(ret)
+                 : "a"(n), "D"(a1), "S"(a2), "d"(a3), "r"(r10), "r"(r8), "r"(r9)
+                 : "rcx", "r11", "memory");
+    return ret;
 }
 
 // TODO: syscalls
