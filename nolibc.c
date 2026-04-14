@@ -28,6 +28,14 @@ __asm__(".global _start\n"
         "   syscall\n"              // exit(%eax)
 );
 
+static long syscall0(long n);
+static long syscall1(long n, long a1);
+static long syscall2(long n, long a1, long a2);
+static long syscall3(long n, long a1, long a2, long a3);
+static long syscall4(long n, long a1, long a2, long a3, long a4);
+static long syscall5(long n, long a1, long a2, long a3, long a4, long a5);
+static long syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6);
+
 static inline long __attribute__((always_inline))
 syscall0(long n) {
     long ret = 0;
