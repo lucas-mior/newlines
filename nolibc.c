@@ -258,6 +258,66 @@ execve(char *pathname, char **argv, char **envp) {
     return syscall3(SYS_execve, (long)pathname, (long)argv, (long)envp);
 }
 
+int
+stat(char *pathname, void *statbuf) {
+    return syscall2(SYS_stat, (long)pathname, (long)statbuf);
+}
+
+int
+stat64(char *pathname, void *statbuf) {
+    return syscall2(SYS_stat, (long)pathname, (long)statbuf);
+}
+
+int
+lstat(char *pathname, void *statbuf) {
+    return syscall2(SYS_lstat, (long)pathname, (long)statbuf);
+}
+
+int
+lstat64(char *pathname, void *statbuf) {
+    return syscall2(SYS_lstat, (long)pathname, (long)statbuf);
+}
+
+int
+fstat64(int fd, void *statbuf) {
+    return syscall2(SYS_fstat, fd, (long)statbuf);
+}
+
+int
+statfs(char *path, void *buf) {
+    return syscall2(SYS_statfs, (long)path, (long)buf);
+}
+
+int
+statfs64(char *path, void *buf) {
+    return syscall2(SYS_statfs, (long)path, (long)buf);
+}
+
+int
+fstatfs(int fd, void *buf) {
+    return syscall2(SYS_fstatfs, fd, (long)buf);
+}
+
+int
+fstatfs64(int fd, void *buf) {
+    return syscall2(SYS_fstatfs, fd, (long)buf);
+}
+
+int
+newfstatat(int dirfd, char *pathname, void *statbuf, int flags) {
+    return syscall4(SYS_newfstatat, dirfd, (long)pathname, (long)statbuf, flags);
+}
+
+int
+fstatat64(int dirfd, char *pathname, void *statbuf, int flags) {
+    return syscall4(SYS_newfstatat, dirfd, (long)pathname, (long)statbuf, flags);
+}
+
+int
+statx(int dirfd, char *pathname, int flags, unsigned int mask, void *statxbuf) {
+    return syscall5(SYS_statx, dirfd, (long)pathname, flags, mask, (long)statxbuf);
+}
+
 // TODO: syscalls
 // _llseek
 // _newselect
@@ -323,10 +383,6 @@ execve(char *pathname, char **argv, char **envp) {
 // fsmount
 // fsopen
 // fspick
-// fstat64
-// fstatat64
-// fstatfs
-// fstatfs64
 // fsync
 // ftruncate
 // ftruncate64
@@ -407,8 +463,6 @@ execve(char *pathname, char **argv, char **envp) {
 // lookup_dcookie
 // lremovexattr
 // lsetxattr
-// lstat
-// lstat64
 // madvise
 // mbind
 // membarrier
@@ -443,7 +497,6 @@ execve(char *pathname, char **argv, char **envp) {
 // munlockall
 // name_to_handle_at
 // nanosleep
-// newfstatat                     
 // nice
 // oldfstat
 // oldlstat
@@ -586,11 +639,6 @@ execve(char *pathname, char **argv, char **envp) {
 // socketpair          
 // splice
 // ssetmask
-// stat
-// stat64
-// statfs
-// statfs64
-// statx
 // stime
 // swapoff
 // swapon
@@ -967,6 +1015,123 @@ main(void) {
         long execve_return_value = execve(invalid_path, argv, envp);
 
         if (execve_return_value >= 0) {
+            return 1;
+        }
+    }
+
+    {
+        char stat_buffer[144] = {0};
+        char *dir_name = ".";
+        long stat_return_value = stat(dir_name, stat_buffer);
+
+        if (stat_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char stat_buffer[144] = {0};
+        char *dir_name = ".";
+        long stat64_return_value = stat64(dir_name, stat_buffer);
+
+        if (stat64_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char stat_buffer[144] = {0};
+        char *dir_name = ".";
+        long lstat_return_value = lstat(dir_name, stat_buffer);
+
+        if (lstat_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char stat_buffer[144] = {0};
+        char *dir_name = ".";
+        long lstat64_return_value = lstat64(dir_name, stat_buffer);
+
+        if (lstat64_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char stat_buffer[144] = {0};
+        long fstat64_return_value = fstat64(0, stat_buffer);
+
+        if (fstat64_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char statfs_buffer[120] = {0};
+        char *dir_name = ".";
+        long statfs_return_value = statfs(dir_name, statfs_buffer);
+
+        if (statfs_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char statfs_buffer[120] = {0};
+        char *dir_name = ".";
+        long statfs64_return_value = statfs64(dir_name, statfs_buffer);
+
+        if (statfs64_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char statfs_buffer[120] = {0};
+        long fstatfs_return_value = fstatfs(0, statfs_buffer);
+
+        if (fstatfs_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char statfs_buffer[120] = {0};
+        long fstatfs64_return_value = fstatfs64(0, statfs_buffer);
+
+        if (fstatfs64_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char stat_buffer[144] = {0};
+        char *dir_name = ".";
+        long newfstatat_return_value = newfstatat(-100, dir_name, stat_buffer, 0);
+
+        if (newfstatat_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char stat_buffer[144] = {0};
+        char *dir_name = ".";
+        long fstatat64_return_value = fstatat64(-100, dir_name, stat_buffer, 0);
+
+        if (fstatat64_return_value < 0) {
+            return 1;
+        }
+    }
+
+    {
+        char statx_buffer[256] = {0};
+        char *dir_name = ".";
+        long statx_return_value = statx(-100, dir_name, 0, 0x7ff, statx_buffer);
+
+        if (statx_return_value < 0) {
             return 1;
         }
     }
