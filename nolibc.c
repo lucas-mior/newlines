@@ -744,12 +744,12 @@ main(void) {
         long kill_return_value = 0;
 
         if (process_id < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         kill_return_value = syscall2(SYS_kill, process_id, 0);
         if (kill_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -757,7 +757,7 @@ main(void) {
         long brk_return_value = brk((void *)0);
 
         if (brk_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -766,7 +766,7 @@ main(void) {
         long mkdir_return_value = mkdir(dir_name, 0777);
 
         if (mkdir_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -775,7 +775,7 @@ main(void) {
         long chdir_return_value = chdir(dir_name);
 
         if (chdir_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -794,49 +794,49 @@ main(void) {
         long unlink_return_value = 0;
 
         if (fd < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         write_success = write(fd, write_buffer, 5);
         if (write_success < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         lseek_return_value = lseek(fd, 0, 0);
         if (lseek_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         read_success = read(fd, read_buffer, 5);
         if (read_success < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         mmap_return_value = mmap((void *)0, 4096, 1, 1, fd, 0);
         if (mmap_return_value == MAP_FAILED) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         mapped_memory = (char *)mmap_return_value;
         if (mapped_memory[0] != 't') {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         mprotect(mapped_memory, 4096, PROT_READ|PROT_WRITE);
 
         munmap_return_value = munmap((void *)mmap_return_value, 4096);
         if (munmap_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         close_return_value = close(fd);
         if (close_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         unlink_return_value = unlink(file_name);
         if (unlink_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -845,7 +845,7 @@ main(void) {
         long chdir_return_value = chdir(parent_dir);
 
         if (chdir_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -854,7 +854,7 @@ main(void) {
         long rmdir_return_value = rmdir(dir_name);
 
         if (rmdir_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -862,7 +862,7 @@ main(void) {
         long dup_return_value = dup(0);
 
         if (dup_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         close(dup_return_value);
@@ -872,7 +872,7 @@ main(void) {
         long dup2_return_value = dup2(0, 100);
 
         if (dup2_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         close(dup2_return_value);
@@ -882,7 +882,7 @@ main(void) {
         long dup3_return_value = dup3(0, 101, 0);
 
         if (dup3_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         close(dup3_return_value);
@@ -892,7 +892,7 @@ main(void) {
         long fork_return_value = fork();
 
         if (fork_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         if (fork_return_value == 0) {
@@ -904,7 +904,7 @@ main(void) {
         long vfork_return_value = vfork();
 
         if (vfork_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         if (vfork_return_value == 0) {
@@ -918,7 +918,7 @@ main(void) {
         long wait_return_value = 0;
 
         if (child_pid < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         if (child_pid == 0) {
@@ -927,7 +927,7 @@ main(void) {
 
         wait_return_value = wait(&wstatus);
         if (wait_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -937,7 +937,7 @@ main(void) {
         long waitpid_return_value = 0;
 
         if (child_pid < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         if (child_pid == 0) {
@@ -946,7 +946,7 @@ main(void) {
 
         waitpid_return_value = waitpid((int)child_pid, &wstatus, 0);
         if (waitpid_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -956,7 +956,7 @@ main(void) {
         long waitid_return_value = 0;
 
         if (child_pid < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         if (child_pid == 0) {
@@ -965,7 +965,7 @@ main(void) {
 
         waitid_return_value = waitid(1, (int)child_pid, siginfo_buffer, 4, (void *)0);
         if (waitid_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -974,7 +974,7 @@ main(void) {
         long getcwd_return_value = getcwd2(cwd_buffer, 4096);
 
         if (getcwd_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -986,7 +986,7 @@ main(void) {
         long unlink_return_value = 0;
 
         if (fd < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         close(fd);
@@ -994,12 +994,12 @@ main(void) {
         rename_return_value = rename(old_file_name, new_file_name);
         if (rename_return_value < 0) {
             unlink(old_file_name);
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         unlink_return_value = unlink(new_file_name);
         if (unlink_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1008,7 +1008,7 @@ main(void) {
         long access_return_value = access(dir_name, 0);
 
         if (access_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1019,7 +1019,7 @@ main(void) {
         long unlink_return_value = 0;
 
         if (fd < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         close(fd);
@@ -1027,12 +1027,12 @@ main(void) {
         chmod_return_value = chmod(file_name, 0777);
         if (chmod_return_value < 0) {
             unlink(file_name);
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         unlink_return_value = unlink(file_name);
         if (unlink_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1041,7 +1041,7 @@ main(void) {
         long fstat_return_value = fstat(0, &stat_buffer);
 
         if (fstat_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1050,7 +1050,7 @@ main(void) {
         long pipe_return_value = pipe(pipe_fds);
 
         if (pipe_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
 
         close(pipe_fds[0]);
@@ -1064,7 +1064,7 @@ main(void) {
         long execve_return_value = execve(invalid_path, argv, envp);
 
         if (execve_return_value >= 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1074,7 +1074,7 @@ main(void) {
         long stat_return_value = stat(dir_name, &stat_buffer);
 
         if (stat_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1084,7 +1084,7 @@ main(void) {
         long stat64_return_value = stat64(dir_name, &stat_buffer);
 
         if (stat64_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1094,7 +1094,7 @@ main(void) {
         long lstat_return_value = lstat(dir_name, &stat_buffer);
 
         if (lstat_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1104,7 +1104,7 @@ main(void) {
         long lstat64_return_value = lstat64(dir_name, &stat_buffer);
 
         if (lstat64_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1113,7 +1113,7 @@ main(void) {
         long fstat64_return_value = fstat64(0, &stat_buffer);
 
         if (fstat64_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1123,7 +1123,7 @@ main(void) {
         long statfs_return_value = statfs(dir_name, statfs_buffer);
 
         if (statfs_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1133,7 +1133,7 @@ main(void) {
         long statfs64_return_value = statfs64(dir_name, statfs_buffer);
 
         if (statfs64_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1142,7 +1142,7 @@ main(void) {
         long fstatfs_return_value = fstatfs(0, statfs_buffer);
 
         if (fstatfs_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1151,7 +1151,7 @@ main(void) {
         long fstatfs64_return_value = fstatfs64(0, statfs_buffer);
 
         if (fstatfs64_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1161,7 +1161,7 @@ main(void) {
         long newfstatat_return_value = newfstatat(-100, dir_name, &stat_buffer, 0);
 
         if (newfstatat_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1171,7 +1171,7 @@ main(void) {
         long fstatat64_return_value = fstatat64(-100, dir_name, &stat_buffer, 0);
 
         if (fstatat64_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1181,7 +1181,7 @@ main(void) {
         long statx_return_value = statx(-100, dir_name, 0, 0x7ff, statx_buffer);
 
         if (statx_return_value < 0) {
-            return 1;
+            exit(EXIT_FAILURE);
         }
     }
 
