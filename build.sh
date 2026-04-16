@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# shellcheck disable=SC2086
 error () {
     >&2 printf "$@"
     return
@@ -22,11 +23,13 @@ CPPFLAGS="$CPPFLAGS -I "$dir/$cbase""
 
 CFLAGS_AMD64="$CFLAGS_AMD64 -nostdlib -static -fno-stack-protector"
 CFLAGS_AMD64="$CFLAGS_AMD64 -g2 -O3 -Wall -Wextra"
+CPPFLAGS="$CPPFLAGS -Dconst="
+CFLAGS="$CFLAGS -fpermissive"
 
 set -x
-ctags --kinds-C=+l *.h *.c 2> /dev/null || true
+find . -iname "*.[ch]" -print0 | xargs -0 ctags --kinds-C=+l 2> /dev/null || true
 vtags.sed tags > .tags.vim 2> /dev/null || true
-$CC $CPPFLAGS -Dconst= -fpermissive $CFLAGS_AMD64 newlines_amd64.c -o newlines_amd64 || exit 1
+$CC $CPPFLAGS $CFLAGS $CFLAGS_AMD64 newlines_amd64.c -o newlines_amd64 || exit 1
 # $CC $CPPFLAGS $CFLAGS       newlines.c       -o newlines || exit 1
 
 ./newlines_amd64 2
@@ -92,6 +95,11 @@ case "$1" in
         fi
         trace_off
     done
+    exit
+    ;;
+"check")
+    CC=gcc CFLAGS="-fanalyzer" ./build.sh
+    scan-build --view -analyze-headers --status-bugs ./build.sh
     exit
     ;;
 esac
