@@ -7,8 +7,8 @@
 #define UNLIKELY(x) (x)
 #endif
 
-int __attribute__((always_inline))
-atoi(const char *s) {
+static inline __attribute__((always_inline)) int 
+atoi2(const char *s) {
     int v = 0;
     while (*s >= '0' && *s <= '9') {
         v = v*10 + (*s - '0');
@@ -38,7 +38,7 @@ main(int argc, char **argv) {
         return 1;
     }
 
-    n = atoi(argv[1]);
+    n = atoi2(argv[1]);
     if (UNLIKELY(n <= 0)) {
         return 1;
     }
