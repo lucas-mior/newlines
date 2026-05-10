@@ -530,7 +530,7 @@ itoa2(char *str, int32 size, llong num) {
     }
 
     // this is here because of gcc -fanalyzer
-    assert(i < 22);
+    ASSERT(i < 22);
 
     return i;
 }
