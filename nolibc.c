@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "cbase/base_macros.h"
+
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_nolibc 1
 #elif !defined(TESTING_nolibc)
@@ -40,7 +42,7 @@ void __attribute__((noreturn))
 exit(int exit_code) {
     syscall1(SYS_exit_group, exit_code);
     syscall1(SYS_exit, exit_code);
-    __builtin_trap();
+    TRAP();
 }
 
 long
@@ -296,6 +298,11 @@ geteuid(void) {
 uint
 getgid(void) {
     return syscall0(SYS_getgid);
+}
+
+long
+raise(long sig) {
+    return kill(getpid(), sig);
 }
 
 static inline long __attribute__((always_inline))
