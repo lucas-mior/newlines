@@ -301,6 +301,11 @@ getgid(void) {
 }
 
 long
+kill(long pid, long sig) {
+    return syscall2(SYS_kill, pid, sig);
+}
+
+long
 raise(long sig) {
     return kill(getpid(), sig);
 }
@@ -503,7 +508,6 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // kexec_file_load
 // kexec_load
 // keyctl
-// kill
 // landlock_add_rule
 // landlock_create_ruleset
 // landlock_restrict_self
