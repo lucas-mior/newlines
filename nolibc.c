@@ -36,10 +36,11 @@ static long syscall4(long n, long a1, long a2, long a3, long a4);
 static long syscall5(long n, long a1, long a2, long a3, long a4, long a5);
 static long syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6);
 
-void
+void __attribute__((noreturn))
 exit(int exit_code) {
+    syscall1(SYS_exit_group, exit_code);
     syscall1(SYS_exit, exit_code);
-    while (1) {}
+    __builtin_trap();
 }
 
 long
