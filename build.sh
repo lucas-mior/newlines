@@ -89,7 +89,7 @@ case "$1" in
                 if ! $test_exe; then
                     gdb --quiet \
                         -ex run -ex backtrace -ex quit \
-                        $test_exe 2>&1 | xsel -b
+                        $test_exe 2>&1 | xsel -i -b
                     exit 1
                 fi
             else
