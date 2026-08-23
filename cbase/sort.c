@@ -18,29 +18,29 @@ typedef struct HeapNode {
     int32 unused;
 } HeapNode;
 
-CBASE_API_DECL void sort_heapify(HeapNode *, int32, int32, int32 (*)(void *, void *));
-CBASE_API_DECL void sort_merge_subsorted(
+extern void sort_heapify(HeapNode *, int32, int32, int32 (*)(void *, void *));
+extern void sort_merge_subsorted(
     void *,
     int32,
     int32,
     int64,
     int32 (*)(void *, void *)
 );
-CBASE_API_DECL void sort_shuffle(void *, int64, int64);
+extern void sort_shuffle(void *, int64, int64);
 
 #if !defined(SORT_COMPARE)
 #define SORT_COMPARE(A, B) compare_func(A, B)
 #endif
 
-CBASE_API_DEF void
+void
 sort_shuffle(void *array, int64 n, int64 size) {
     char *tmp = malloc2(size);
     char *arr = array;
 
     if (n > 1) {
         for (int64 i = 0; i < n - 1; i += 1) {
-            int64 rnd = rand();
-            int64 j = i + rnd / (RAND_MAX / (n - i) + 1);
+            int64 rnd = rand_int();
+            int64 j = i + rnd / (INT32_MAX / (n - i) + 1);
 
             memcpy64(tmp, arr + j*size, size);
             memcpy64(arr + j*size, arr + i*size, size);
@@ -52,7 +52,7 @@ sort_shuffle(void *array, int64 n, int64 size) {
     return;
 }
 
-CBASE_API_DEF void
+void
 sort_heapify(HeapNode *heap, int32 p, int32 i,
              int32 (*compare_func)(void *a, void *b)) {
     (void)compare_func;
@@ -87,7 +87,7 @@ sort_heapify(HeapNode *heap, int32 p, int32 i,
     return;
 }
 
-CBASE_API_DEF void
+void
 sort_merge_subsorted(
     void *array,
     int32 n,
@@ -104,7 +104,7 @@ sort_merge_subsorted(
     char *output;
     char *array2 = array;
 
-    ASSERT(n >= 0);
+    ASSERT_NON_NEGATIVE(n);
     ASSERT(p >= 1);
     ASSERT(p <= MAX_NTHREADS);
 
@@ -113,7 +113,7 @@ sort_merge_subsorted(
     }
 
     ASSERT(p <= n);
-    ASSERT(obj_size > 0);
+    ASSERT_POSITIVE(obj_size);
     ASSERT(array);
     ASSERT(compare);
 
@@ -163,7 +163,7 @@ sort_merge_subsorted(
         }
     }
 
-    ASSERT(heap_length == 0);
+    ASSERT_ZERO(heap_length);
     memcpy64(array2, output, memory_size);
     free2(output, memory_size);
     return;
@@ -215,9 +215,9 @@ test_sorting(int32 n, int32 p) {
 
     printf("n_sub[P - 1] = %d\n", n_sub[p - 1]);
 
-    srand(42);
+    rand_int_seed(42);
     for (int32 i = 0; i < n; i += 1) {
-        array[i] = rand() % MAXI;
+        array[i] = rand_int() % MAXI;
     }
 
     sort_shuffle(array, n, SIZEOF(*array));

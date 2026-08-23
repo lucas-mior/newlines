@@ -7,15 +7,11 @@
 #include "primitives.h"
 #include "base_macros.h"
 
-#if !defined(ALIGNMENT)
-#define ALIGNMENT 16
-#endif
-
 #define MEM_FREED 0xDC
 #define MEM_MALLOCED_UNINITIALIZED 0xCD
 #define MEM_DONT_READ 0xBD
 
-#define MEMORY_PADDING ((int32)ALIGNMENT)
+#define MEMORY_PADDING ((int32)32)
 
 #if !defined(TESTING_memory)
 #define TESTING_memory 0
@@ -43,16 +39,16 @@
 #define DEBUGGING_MEMORY DEBUGGING
 #endif
 
-CBASE_API_DECL void free2_(void *, int64);
-CBASE_API_DECL void free_debug(char *, int32, char *, void *, int64);
-CBASE_API_DECL void *malloc_debug(char *, int32, char *, int64, bool);
-CBASE_API_DECL void memcpy64(void *, void *, int64);
-CBASE_API_DECL void memmove64(void *, void *, int64);
-CBASE_API_DECL void memory_check(void);
-CBASE_API_DECL void memset64(void *, int, int64);
-CBASE_API_DECL void *realloc4(void *, int64, int64, int64);
-CBASE_API_DECL void *realloc_debug(char *, int32, char *, void *, int64, int64, int64);
-CBASE_API_DECL void *realloc_flex_debug(
+extern void free2_(void *, int64);
+extern void free_debug(char *, int32, char *, void *, int64);
+extern void *malloc_debug(char *, int32, char *, int64, bool);
+extern void memcpy64(void *, void *, int64);
+extern void memmove64(void *, void *, int64);
+extern void memory_check(void);
+extern void memset64(void *, int, int64);
+extern void *realloc4(void *, int64, int64, int64);
+extern void *realloc_debug(char *, int32, char *, void *, int64, int64, int64);
+extern void *realloc_flex_debug(
     char *,
     int32,
     char *,
@@ -62,13 +58,13 @@ CBASE_API_DECL void *realloc_flex_debug(
     int64,
     int64
 );
-CBASE_API_DECL void *xmalloc(int64, bool);
-CBASE_API_DECL void *xmemdup(void *, int64);
-CBASE_API_DECL void *xmmap_commit(int64 *);
-CBASE_API_DECL void xmunmap(void *, int64);
-CBASE_API_DECL void *xrealloc(void *, int64);
-CBASE_API_DECL char *xstrdup(char *);
-CBASE_API_DECL char *xstrndup(char *, int64);
+extern void *xmalloc(int64, bool);
+extern void *xmemdup(void *, int64);
+extern void *xmmap_commit(int64 *);
+extern void xmunmap(void *, int64);
+extern void *xrealloc(void *, int64);
+extern char *xstrdup(char *);
+extern char *xstrndup(char *, int64);
 
 #if DEBUGGING_MEMORY
 #define malloc2_zero(SIZE) \

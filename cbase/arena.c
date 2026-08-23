@@ -17,12 +17,12 @@
 
 static Arena *global_arena = NULL;
 
-CBASE_API_DEF void
+void
 arena_print(Arena *arena) {
     while (arena) {
         error2("Arena %p {\n", (void *)arena);
         error2("  name: %s\n", arena->name);
-        error2("  begin: %p\n", arena->begin);
+        error2("  begin: %p\n", (void *)arena->begin);
         error2("  pos: %p\n", arena->pos);
         error2("  size: %lld\n", arena->size);
         error2("  npushed: %lld\n", arena->npushed);
@@ -38,7 +38,7 @@ arena_print(Arena *arena) {
     return;
 }
 
-CBASE_API_DEF char *
+char *
 arena_strerror(int arena_errno) {
     switch (arena_errno) {
     case EARENA_INVALID:
@@ -58,7 +58,7 @@ arena_strerror(int arena_errno) {
     }
 }
 
-CBASE_API_DEF Arena *
+Arena *
 arena_create(int64 size, char *name) {
     Arena *arena;
 
@@ -83,7 +83,7 @@ arena_create(int64 size, char *name) {
     return arena;
 }
 
-CBASE_API_DEF void
+void
 arena_destroy(Arena *arena) {
     Arena *next;
 
@@ -96,13 +96,13 @@ arena_destroy(Arena *arena) {
     return;
 }
 
-CBASE_API_DEF int64
+int64
 arena_data_size(Arena *arena) {
     int64 size = arena->size - (arena->begin - (char *)arena);
     return size;
 }
 
-CBASE_API_DEF Arena *
+Arena *
 arena_with_space(Arena *arena, int64 size) {
     if (arena == NULL) {
         errno = EARENA_INVALID;
@@ -131,7 +131,7 @@ arena_with_space(Arena *arena, int64 size) {
     return arena;
 }
 
-CBASE_API_DEF void *
+void *
 arena_push(Arena *arena, int64 size) {
     void *before;
     size = ALIGN(size);
@@ -151,7 +151,7 @@ arena_push(Arena *arena, int64 size) {
     return before;
 }
 
-CBASE_API_DEF void *
+void *
 arenas_push(Arena **arenas, int32 number, int64 size) {
     for (int32 i = 0; i < number; i += 1) {
         void *p;
@@ -162,7 +162,7 @@ arenas_push(Arena **arenas, int32 number, int64 size) {
     return NULL;
 }
 
-CBASE_API_DEF void *
+void *
 xarena_push(Arena *arena, int64 size) {
     void *p;
 
@@ -171,7 +171,7 @@ xarena_push(Arena *arena, int64 size) {
             global_arena = arena_create(SIZEMB(2), "global_arena");
             arena = global_arena;
         } else {
-            error2("Error in %s: arena is NULL.\n", __func__);
+            error("arena is NULL.\n");
             fatal(EXIT_FAILURE);
         }
     }
@@ -184,7 +184,7 @@ xarena_push(Arena *arena, int64 size) {
     return p;
 }
 
-CBASE_API_DEF void *
+void *
 xarenas_push(Arena **arenas, int32 narenas, int64 size) {
     void *p;
 
@@ -196,7 +196,7 @@ xarenas_push(Arena **arenas, int32 narenas, int64 size) {
     return p;
 }
 
-CBASE_API_DEF uint32
+uint32
 arena_push_index32(Arena *arena, uint32 size) {
     void *before;
     Arena *arena_save = arena;
@@ -221,7 +221,7 @@ arena_push_index32(Arena *arena, uint32 size) {
     return (uint32)((char *)before - (char *)arena->begin);
 }
 
-CBASE_API_DEF Arena *
+Arena *
 arena_of(Arena *arena, void *p) {
     uintptr pointer_num = (uintptr)p;
 
@@ -241,7 +241,7 @@ arena_of(Arena *arena, void *p) {
     return NULL;
 }
 
-CBASE_API_DEF bool
+bool
 arenas_pop(Arena **arenas, int32 narenas, void *p) {
     for (int32 i = 0; i < narenas; i += 1) {
         if (arena_decr(arenas[i], p)) {
@@ -251,7 +251,7 @@ arenas_pop(Arena **arenas, int32 narenas, void *p) {
     return false;
 }
 
-CBASE_API_DEF bool
+bool
 arena_decr(Arena *arena, void *p) {
     if ((arena = arena_of(arena, p)) == NULL) {
         return false;
@@ -271,7 +271,7 @@ arena_decr(Arena *arena, void *p) {
     return true;
 }
 
-CBASE_API_DEF int32
+int32
 arena_nlinked(Arena *arena) {
     int32 n = 0;
     while (arena) {
@@ -281,7 +281,7 @@ arena_nlinked(Arena *arena) {
     return n;
 }
 
-CBASE_API_DEF void *
+void *
 arena_reset(Arena *arena) {
     Arena *first = arena;
 
@@ -300,7 +300,7 @@ arena_reset(Arena *arena) {
     return first->begin;
 }
 
-CBASE_API_DEF void *
+void *
 arenas_reset(Arena **arenas, int32 number) {
     for (int32 i = 0; i < number; i += 1) {
         arena_reset(arenas[i]);
@@ -308,7 +308,7 @@ arenas_reset(Arena **arenas, int32 number) {
     return NULL;
 }
 
-CBASE_API_DEF void
+void
 arenas_destroy(Arena **arenas, int32 number) {
     for (int32 i = 0; i < number; i += 1) {
         arena_destroy(arenas[i]);
@@ -335,20 +335,6 @@ arena_functions_sink(void) {
 #if TESTING_arena
 #define CBASE_IMPLEMENT
 #include "cbase.h"
-// flags: -lm
-
-#if !defined(UTIL_C)
-static void
-memset64(void *buffer, int value, int64 size) {
-    if (size == 0) {
-        return;
-    }
-    ASSERT(size >= 0);
-    ASSERT_LESS(size, SIZE_MAX);
-    memset(buffer, value, (size_t)size);
-    return;
-}
-#endif
 
 int
 main(void) {
@@ -375,8 +361,6 @@ main(void) {
     ASSERT_EQUAL(ALIGN_POWER_OF_2(17, 16), 32);
     ASSERT_EQUAL(ALIGN_POWER_OF_2(18, 16), 32);
 
-    srand((uint32)time(NULL));
-
     ASSERT_EQUAL(arena_nlinked(arena), 1);
 
     {
@@ -384,7 +368,7 @@ main(void) {
         int64 total_pushed = 0;
 
         for (int32 i = 0; i < LENGTH(objs); i += 1) {
-            int64 size = ALIGN(1ul + (ulong)(rand() % 10000));
+            int64 size = ALIGN(1 + (rand_int() % 10000));
             ASSERT((objs[i] = arena_push(arena, size)));
 
             total_size += size;
@@ -398,7 +382,7 @@ main(void) {
         }
 
         for (Arena *a = arena; a; a = a->next) {
-            ASSERT_MORE(a->npushed, 0);
+            ASSERT_POSITIVE(a->npushed);
             total_pushed += a->npushed;
         }
         ASSERT_EQUAL(total_pushed, LENGTH(objs));
@@ -409,20 +393,20 @@ main(void) {
         int32 nallocated = LENGTH(objs);
 
         while (nallocated > 0) {
-            uint32 j = (uint32)rand() % LENGTH(objs);
-            uint32 k = (uint32)rand() % LENGTH(objs);
+            int32 j = rand_int() % LENGTH(objs);
+            int32 k = rand_int() % LENGTH(objs);
             if (objs[j]) {
                 ASSERT(arena_decr(arena, objs[j]));
                 objs[j] = NULL;
                 nallocated -= 1;
             }
-            if ((k + 1) < (uint32)(nallocated / 2)) {
+            if ((k + 1) < (nallocated / 2)) {
                 ASSERT((objs[j] = arena_push(arena, ALIGNMENT)));
                 nallocated += 1;
             }
         }
         for (Arena *a = arena; a; a = a->next) {
-            ASSERT_EQUAL(a->npushed, 0);
+            ASSERT_ZERO(a->npushed);
         }
 
         ASSERT(!arena_decr(arena, &aux));
@@ -443,7 +427,7 @@ main(void) {
 
         ASSERT(arena_decr(arena, p1));
         ASSERT(arena_decr(arena, p2));
-        ASSERT_EQUAL(arena->npushed, 0);
+        ASSERT_ZERO(arena->npushed);
     }
 
     arena_reset(arena);
@@ -464,17 +448,17 @@ main(void) {
         ASSERT(arena_decr(arena, p3));
         ASSERT_EQUAL(arena->npushed, 1);
         ASSERT(arena_decr(arena, p4));
-        ASSERT_EQUAL(arena->npushed, 0);
+        ASSERT_ZERO(arena->npushed);
     }
 
     arena_reset(arena);
     ASSERT(arena->pos == arena->begin);
-    ASSERT_EQUAL(arena->npushed, 0);
+    ASSERT_ZERO(arena->npushed);
 
     ASSERT(arena->next->pos == arena->next->begin);
-    ASSERT_EQUAL(arena->next->npushed, 0);
+    ASSERT_ZERO(arena->next->npushed);
     ASSERT(arena->pos == arena->begin);
-    ASSERT_EQUAL(arena->npushed, 0);
+    ASSERT_ZERO(arena->npushed);
 
     arena_reset(arena);
     {
@@ -512,8 +496,8 @@ main(void) {
         ASSERT(arenas_pop(arenas, (int32)arena_count, third_pointer));
 
         arenas_reset(arenas, arena_count);
-        ASSERT_EQUAL(arenas[0]->npushed, 0);
-        ASSERT_EQUAL(arenas[1]->npushed, 0);
+        ASSERT_ZERO(arenas[0]->npushed);
+        ASSERT_ZERO(arenas[1]->npushed);
 
         error_message = arena_strerror(EARENA_INVALID);
         ASSERT_EQUAL(error_message, "Invalid arena pointer");

@@ -2,6 +2,7 @@
 #define NOLIBC_C
 
 #define const
+#include "cbase.h"
 
 #include <sys/syscall.h>
 #include <sys/stat.h>
@@ -55,7 +56,7 @@ write(int file_descriptor, void *buffer, size_t count) {
     return syscall3(SYS_write, file_descriptor, (long)buffer, count);
 }
 
-static inline long __attribute__((always_inline))
+int
 open(char *path, long flags, long mode) {
     return syscall3(SYS_open, (long)path, flags, mode);
 }

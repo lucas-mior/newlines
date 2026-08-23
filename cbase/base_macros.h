@@ -4,26 +4,18 @@
 // this is almost completely self contained,
 // it only depends on platform_detection.h,
 // but not on anything else on cbase/
+// We also have to include libc.h,
+// so that macros defined by system headers can be
+// undefined before I define them.
 
 #if !defined(BASE_MACROS_H)
 #define BASE_MACROS_H
 
 #include "platform_detection.h"
-
-#if !defined(CBASE_API_DECL)
-#define CBASE_API_DECL extern
-#endif
-
-#if !defined(CBASE_API_DEF)
-#define CBASE_API_DEF
-#endif
+#include "libc.h"
 
 #if !defined(CBASE_PRIVATE)
 #define CBASE_PRIVATE static
-#endif
-
-#if !defined(CBASE_TEMPLATE)
-#define CBASE_TEMPLATE static
 #endif
 
 #define S(...) #__VA_ARGS__
@@ -62,13 +54,6 @@
   CAT_SELECT(macro, NUM_ARGS(__VA_ARGS__))(__VA_ARGS__)
 
 #define CAT(...) CAT_SELECT_ON_NUM_ARGS(CAT, __VA_ARGS__)
-
-#include <stddef.h>
-#if !defined(offsetof)
-#define OFFSET_OF(STRUCT, FIELD) ((size_t)&(((STRUCT *)0)->FIELD))
-#else
-#define OFFSET_OF(STRUCT, FIELD) offsetof(STRUCT, FIELD)
-#endif
 
 #define RESET      "\x1b[0m"
 
@@ -115,13 +100,20 @@ _Generic((SIZE), \
     int:    ALIGN_POWER_OF_2_((uint)SIZE,   (uint)A)    \
 )
 
+#if defined(__AVX2__) || defined(__AVX__)
+#define ALIGNMENT 32ul
+#elif defined(__SSE__) || defined(__x86_64__)
 #define ALIGNMENT 16ul
+#else
+#define ALIGNMENT 8ul
+#endif
+
 #if defined(ALIGN)
 #undef ALIGN
 #endif
 #define ALIGN(x) ALIGN_POWER_OF_2(x, ALIGNMENT)
 
-#if defined(__GNUC__)
+#if CC_GCC || CC_CLANG
 #define ASSUME_ALIGNED_EXPR(X) __builtin_assume_aligned((X), ALIGNMENT)
 #define ASSUME_ALIGNED(X) do { \
     X = __builtin_assume_aligned(X, ALIGNMENT); \
@@ -138,15 +130,14 @@ _Generic((SIZE), \
 #if DEBUGGING
   #define INLINE static
 #else
-  #if defined(__GNUC__)
+  #if CC_GCC || CC_CLANG
     #define INLINE static inline __attribute__((always_inline))
   #else
     #define INLINE static inline
   #endif
 #endif
 
-// cproc uses gcc pre processor but __has_include does not work properly
-#if !defined(__CPROC__) && defined(__has_include)
+#if defined(__has_include)
   #if __has_include(<valgrind/valgrind.h>)
     #include <valgrind/valgrind.h>
   #else
@@ -158,16 +149,35 @@ _Generic((SIZE), \
 
 #if CC_GCC || CC_CLANG
 #define UNUSED __attribute((unused))
+#define ATTR_PRINTF(A, B) __attribute__((format(printf, A, B)))
 #else
 #define UNUSED
+#define ATTR_PRINTF(A, B)
 #endif
 
-#define π  3.14159265358979323846264338327950288
-#define π2 2*π
-#define τ  2*π
+#define PI  3.14159265358979323846264338327950288
+#define PI2 2*PI
+#define TAU 2*PI
+
+#if !defined(M_PI)
+#define M_PI PI
+#endif
 
 #if !defined(__has_builtin)
   #define __has_builtin(x) 0
+#endif
+
+#if !defined(__has_attribute)
+  #define __has_attribute(x) 0
+#endif
+
+#if !defined(FALLTHROUGH)
+  #if (CC_GCC && (__GNUC__ >= 7)) \
+    || (CC_CLANG && __has_attribute(fallthrough))
+    #define FALLTHROUGH __attribute__((fallthrough))
+  #else
+    #define FALLTHROUGH ((void)0)
+  #endif
 #endif
 
 #if __has_builtin(__builtin_unreachable)

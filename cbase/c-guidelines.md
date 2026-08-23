@@ -13,10 +13,13 @@ For formatting-only style rules, see `c-format.md`.
 - Use `CamelCase` for types.
 - Use `snake_case` for variables and functions.
 - Use `CAPITAL_SNAKE_CASE` for macros.
+  * Exception: `error` macro.
 - Variable names should be descriptive, but descriptiveness must be
   proportional to scope. Do not give `too_much_descriptive_name` to a variable
   that is only used inside a short loop.
 - Use `i`, `j`, and `k` for `for` loop counters.
+- Don't use `error` for names of variables, it is already used to print error
+  messages. Use something like `${some_prefix}_error`.
 
 ## for loops
 - Use the pattern `for (int32 i = 0; i < N; i += 1)` for loops.
@@ -27,7 +30,8 @@ For formatting-only style rules, see `c-format.md`.
 - `const` keyword:
   * Never use it in function declarations nor definitions
   * You can use it for static constant global data
-  * You can use it for casts needed to interface with the C standard library.
+  * You can use it for casts needed to interface with the C standard library or
+    other stupid libraries.
 - Avoid using `size_t`, `ptrdiff_t`, and `ssize_t`.
   * Prefer `int64` or `int32` depending on context.
   * The only reason to use `size_t`, `ptrdiff_t`, and `ssize_t` is for casting
@@ -36,26 +40,34 @@ For formatting-only style rules, see `c-format.md`.
   * Include `primitives.h` and use the better aliases typedefed there.
 - Avoid using legacy C integers: `short`, `int`, `long`, and `long long`.
   * Prefer using `int16`, `int32`, and `int64` instead.
+    + See `cbase/primitives.h` to see how they are defined.
 - Boolean flags that are not used in hot loops or hot structs should use the
   `bool` type and the `true` and `false` keywords to communicate intent.
 - If a boolean variable is used in a very hot loop, `int32` may be preferable.
 - Do not confuse booleans with bits in bit flags. Use `#define BITFLAGS 1` in
-  `xenums.c` for up to 32 related flags that occupy 32 bits.
-- When casting to a smaller integer type, or when casting double to integer,
-  and we are not sure if it fits, check first using the `MAXOF` macro:
+  `xenums.c` for up to 32 related flags that occupy 1 bit each.
+- When casting to a smaller integer type, or when casting double to integer, or
+  double to float, and we are not sure if it fits, check first using the `MAXOF`
+  macro:
   ```c
-  int64 value = function();
-  int32 result;
+  int32 function_that_returns_int32(void *param) {
+      int64 value = function_that_returns_int64(param);
 
-  if (value >= MAXOF(result)) {
-      error("Too large value\n");
-      fatal(EXIT_FAILURE);
+      // Note: MAXOF uses _Generic, it does not really runs the function below.
+      if (value >= MAXOF(function_that_returns_int32())) {
+          error("Too large value\n");
+          fatal(EXIT_FAILURE);
+      }
+
+      // Note: (int32) cast is hardcoded,
+      // but we will be warned by the compiler if the return type ever changes
+      return (int32)value;
   }
-
-  result = (int32)value;
   ```
 - unsigned integers: avoid, prefer signed integers
   * use unsigned integers for bit flags and other bit-wise operated values.
+  * use unsigned for converting integers to and from enums.
+  * use unsigned for intentional wrapping, like when needed while hashing
   * when interfacing a stupid library that receives unsigned integers where a
     signed integer is used on our side of the code, write a wrapper. The
     wrapper checks if the signed value is less than zero before converting.
@@ -63,6 +75,8 @@ For formatting-only style rules, see `c-format.md`.
     signed integer is used on our side of the code, write a wrapper. The
     wrapper checks if the received value fits in the positive range of our
     signed integer type. Use `MAXOF()` macro defined in cbase/.
+  * For all other uses like arithmetic, indices, sizes, offsets, etc, use
+    signed integers.
 
 ## Expressions and control flow
 
@@ -95,9 +109,9 @@ typeof(var)  // good
 ```
 
 ## Memory allocation
-
 - Avoid `malloc`, `calloc`, `realloc`, and `free`.
-  * Use wrappers that track allocations in debug builds instead:
+  * Use wrappers from `cbase/memory.c` that track allocations in debug builds
+    instead:
     + `malloc2(size)`
     + `free2(pointer, size)`
     + `realloc2(pointer, old_array_capacity, new_array_capacity, obj_size)`
@@ -105,14 +119,28 @@ typeof(var)  // good
     + `realloc2(size) + memset64(pointer, 0, size)` instead of `calloc`.
   * The wrappers above never fail: if out of memory, they exit the program. No
     need to check if they succeded or not.
-  * `free2` already checks if the passed pointer is NULL. Don't check if the
+  * `free2` already checks if the passed pointer is NULL. Never check if the
     pointer is NULL before calling `free2`.
 - Choose what is best in each situation:
-  * Use traditional `malloc2`, `realloc2`, and `free2`.
   * Use the `arena.c` bump allocator for groups of allocations with the same
     lifetime, either of equal or different sizes.
+  * Use traditional `malloc2`, `realloc2`, and `free2` when more appropriate.
   * Use the stack for small capped allocations.
 - Never use VLAs.
+- Some guidelines to avoid memory errors (use after free, double free, invalid
+  free, leak):
+  * Use the arena allocator from `cbase/arena.c` as much as possible. 
+    Only use `malloc2`, `realloc2`, and `free2` if you
+    really need the flexibility, for instance:
+    + if you need to grow the allocation
+    + if you are inside a callback that would be infeasible to pass an arena
+      pointer
+    + possible other reasons
+  * For tracking ownership, you can use handlers to a specific module/type of
+    the program that is responsible for allocating and freeing its objects. A
+    good example is `cbase/hash.c`
+  * For dynamic arrays, use the generic arrays defined in `cbase/array.c`, if
+    possible.
 
 ### exiting the program
 - To exit from within `main()`, always use `exit()`, never `return`.
@@ -251,16 +279,16 @@ strings. Prefer `memcpy64`, `memmem64`, or custom functions that operate on
 string with known length.
 
 ## Comparing strings:
-In general, avoid `strcmp()`:
+In general, avoid `strcmp()`, use the alternatives below instead:
 - For strings that are both null terminated and we don't know the length of
   either one:
   * use `strequal(s1, s2)`
-- For strings that we know the length of the one (might be null terminated but
-  not necessarly), but we don't know the length of the other (the other must be
-  null terminated):
+- For strings that we know the length of the one (it might be null terminated
+  but not necessarly), but we don't know the length of the other (the other must
+  be null terminated):
   * use `STREQUAL(s1, s1_len, s2)`
 - For strings that we know the length of both (they might be null terminated,
-  but not necessarly:
+  but not necessarly):
   * use `STREQUAL(s1, s1_len, s2, s2_len)`
 - Use `strcmp()` when comparing strings for sorting purposes.
 
@@ -280,8 +308,8 @@ functions. Those are defined in cbase/.
 ## Error messages
 
 - Use the `error` or `error2` macro.
-  * `error` includes `__FILE__`, `__LINE__`, and `__func__`, so avoid using it
-    for error messages composed of multiple calls.
+  * `error` includes `__FILE__`, `__LINE__`, and `__func__`,
+    so avoid using it for error messages composed of multiple calls.
   * `error2` is simply a wrapper for `fprintf(stderr,`, so avoid using it if
     more context about the bug would be useful.
 
@@ -398,8 +426,8 @@ for (int32 i = 0; i < LENGTH(some_array); i += 1) {
 
 ### Return value for errors
 - Functions that return an index, or another form of non negative integer,
-  can use -1 to indicate that the function failed.
-- Functions that return pointer to allocated memory can return NULL in case they fail
+  can return -1 to indicate that the function failed.
+- Functions that return a pointer can return NULL in case they fail
 - Other functions can return a `bool`: `true` means that the functions succeded,
   `false` means that the function failed. If information about the error could
   be useful, organize the function to have a struct pointer parameter that fills
@@ -493,10 +521,27 @@ if (pointer) {
 ```
 
 ## Assertions
-
-- Use the assertions defined in `assert.c`.
+- Use the assertions defined in `cbase/assertions.c`.
+  - `ASSERT(expression)`
+  - `ASSERT_NULL(pointer)`
+  - `ASSERT_ZERO(integer expression)`
+  - `ASSERT_POSITIVE(integer expression)`
+  - `ASSERT_NEGATIVE(integer expression)`
+  - `ASSERT_NON_POSITIVE(integer expression)`
+  - `ASSERT_NON_NEGATIVE(integer expression)`
+  - `ASSERT_EQUAL(number or string or pointer 1, number or string or pointer 2)`
+  - `ASSERT_EQUAL(string, string_len, other_string)`
+  - `ASSERT_LESS(number expr 1, number expr 2)`
+  - `ASSERT_MORE(number expr 1, number expr 2)`
+  - `ASSERT_LESS_EQUAL(number expr 1, number expr 2)`
+  - `ASSERT_MORE_EQUAL(number expr 1, number expr 2)`
+  - `ASSERT_CONTAINS(haystack, haystack_len, needle)`
+  - `ASSERT_NOT_CONTAINS(haystack, haystack_len, needle)`
+  - `ASSERT_FILE_CONTAINS(haystack, haystack_len, needle)`
   * They all use `__builtin_unreachable` if the condition fails if not
     debugging. Don't use them for non-debugging assertions.
+    + Assertions that must happen in non-debugging builds, must be explicit code
+      with a clear error message, not an assertion macro.
 - Do not use `ASSERT_EQUAL` for enums.
   * Use `ASSERT(enumvalue1 == enumvalue2)` instead, so that the compiler does
     not complain.
@@ -561,6 +606,9 @@ default:
   * Don't use `memset(&my_struct, 0, SIZEOF(my_struct));`
 - To initialize a stack array to zero, use `MyType array[ARRAY_SIZE] = {0};`
   * Don't use `memset(&array, 0, SIZEOF(array));`
+- To initialize a heap struct to zero, use `*my_struct = (MyStruct){0};`
+  * Don't use `memset(my_struct, 0, SIZEOF(*my_struct));`
+- To initialize a heap array to zero, use `memset64`.
 - Try to keep the scope of variables reduced. Use of artificial blocks is
   sometimes useful:
   ```c
@@ -570,11 +618,38 @@ default:
   }
   ```
 - Prefer to declare variable at the top of blocks
-  * Avoid mixing declarations and code (`-Wdeclaration-after-statement`)
-  * Unless doing code generation / meta programming:
-    then it is fine to mix declarations and code.
+  * Exception: for loop counters (`for (int32 i = 0; i < N; i += 1)`)
+  * Another exception: generated code / meta programming.
+  * Don't mix declarations and code (`-Wdeclaration-after-statement`)
+  * Sometimes it is good practice is to create artificial blocks to reduce the
+    scope of variables. Only do it for reasonably long functions, for short
+    functions, declare variables at the top of the function and call it a day.
+  * If a variable is only used inside a while/for loop, declare inside the
+    while/for block:
+    ```c
+    // bad
+    static void
+    function(int32 a, int32 b) {
+        int32 x;
+
+        while (a != b) {
+            x = a;
+            // some code
+        }
+    }
+
+    // good
+    static void
+    function(int32 a, int32 b) {
+        while (a != b) {
+            int32 x = a;
+            // some code
+        }
+    }
+    ```
+
 - Variable that have a "default return" value, or a "stub" value, shall be
-  initialized:
+  initialized with the declaration:
   ```c
   // bad
   static bool function(void *parameters) {
@@ -599,8 +674,8 @@ default:
   * But initializing an "ORing" or "summing" variable is better done before the
     "ORing"/"summing" loop:
     ```c
-    // bad (this obscures the fact that 0 is not a dummy return, it is a valid
-    //      temporary state of the variable)
+    // bad (this obscures the fact that 0 is not a dummy return:
+    //      it is a valid temporary state of the variable)
     static uint32
     function(void *params) {
         uint32 mask = 0;
@@ -627,7 +702,8 @@ default:
         return mask;
     }
 
-    // even better (now the important variable is initialized near the loop)
+    // even better (now the important variable is initialized near the loop,
+                    while also keeping conciseness)
     static uint32
     function(void *params) {
         double other_var;
@@ -643,14 +719,16 @@ default:
   same line:
   ```c
   // bad
-  void my_function(ProgramOptions *options) {
+  void
+  my_function(ProgramOptions *options) {
       char *name;
 
       name = options->name;
   }
 
   // good
-  void my_function(ProgramOptions *options) {
+  void
+  my_function(ProgramOptions *options) {
       char *name = options->name;
   }
   ```
@@ -697,7 +775,7 @@ When you need one of those, make use of the algorithms implemented in
 Every .c file (except the main program) must have a testing block:
 ```c
 #if TESTING_file_prefix`
-#define CBASE_IMPLEMENT
+#define CBASE_IMPLEMENT 1
 #include "cbase.h"
 
 #include "other_needed_file.c"
@@ -707,6 +785,19 @@ int main(void) {
 }
 #endif /* TESTING_file_prefix */
 ```
+
+## File organization
+- Add include guards for every C file, except the ones uses as include templates
+  like `cbase/hash.c` and `cbase/xenums.c`.
+- The first file to be included is always `cbase.h`, or the build will break.
+  * Exceptions: Some files in `cbase/` are not allowed to include `cbase.h`
+    because `cbase.h` itself depends on them.
+
+## libc functions
+In general, avoid using libc functions.  In particular, never use any function
+listed in `functions_never_use.txt`; Functions listed in
+`functions_allowed_cbase_only.txt` may be used (only to write a wrapper for it)
+in `cbase/`, but not in any project main code (use the wrapper instead).
 
 ## Missing cases
 

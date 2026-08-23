@@ -107,9 +107,9 @@ struct Map {
     int64 slot_states_size;
 };
 
-#define CHECK_COMMON_MAP(FIELD) \
-    _Static_assert( \
-        OFFSET_OF(struct Map, FIELD) == OFFSET_OF(CommonMap, FIELD), \
+#define CHECK_COMMON_MAP(FIELD)                                       \
+    _Static_assert(                                                   \
+        offsetof(struct Map, FIELD) == offsetof(CommonMap, FIELD),    \
         "CommonMap and new Map must have the same offset for " #FIELD \
     )
 
@@ -192,7 +192,9 @@ static void
 CAT(hash_zero_, HASH_TYPE)(struct Map *map) {
     map->length = 0;
     map->occupied = 0;
-    memset64(map->array, 0, map->capacity*sizeof(Bucket));
+    for (uint32 i = 0; i < map->capacity; i += 1) {
+        map->array[i] = (Bucket){0};
+    }
     memset64(map->slot_states, 0, map->capacity*sizeof(*map->slot_states));
 #if HASH_DUPLICATE_KEYS
     arena_reset(map->arena_keys);
@@ -447,8 +449,8 @@ CAT(hash_insert_pre_calc_, HASH_TYPE)(struct Map *map,
 #if HASH_KEY_FIXED_LEN
     if (CAT(hash_probe_, HASH_TYPE)(map, key, hash, base_index, &target_idx))
 #else
-    if (CAT(hash_probe_, HASH_TYPE)(map, key, key_length, hash,
-                                         base_index, &target_idx))
+    if (CAT(hash_probe_, HASH_TYPE)(map, key, key_length,
+                                    hash, base_index, &target_idx))
 #endif
     {
         return false;
@@ -529,8 +531,8 @@ CAT(hash_overwrite_pre_calc_, HASH_TYPE)(struct Map *map, HASH_KEY_TYPE *key
 #if HASH_KEY_FIXED_LEN
     if (CAT(hash_probe_, HASH_TYPE)(map, key, hash, base_index, &target_idx))
 #else
-    if (CAT(hash_probe_, HASH_TYPE)(map, key, key_length, hash,
-                                         base_index, &target_idx))
+    if (CAT(hash_probe_, HASH_TYPE)(map, key, key_length,
+                                    hash, base_index, &target_idx))
 #endif
     {
         target = &map->array[target_idx];
@@ -600,8 +602,8 @@ CAT(hash_lookup_pre_calc_, HASH_TYPE)(struct Map *map,
 #if HASH_KEY_FIXED_LEN
     if (CAT(hash_probe_, HASH_TYPE)(map, key, hash, base_index, &target_idx))
 #else
-    if (CAT(hash_probe_, HASH_TYPE)(map, key, key_length, hash,
-                                         base_index, &target_idx))
+    if (CAT(hash_probe_, HASH_TYPE)(map, key, key_length,
+                                    hash, base_index, &target_idx))
 #endif
     {
 #if defined(HASH_VALUE_TYPE)
@@ -657,8 +659,8 @@ CAT(hash_remove_pre_calc_, HASH_TYPE)(struct Map *map,
 #if HASH_KEY_FIXED_LEN
     if (CAT(hash_probe_, HASH_TYPE)(map, key, hash, base_index, &target_idx))
 #else
-    if (CAT(hash_probe_, HASH_TYPE)(map, key, key_length, hash,
-                                         base_index, &target_idx))
+    if (CAT(hash_probe_, HASH_TYPE)(map, key, key_length,
+                                    hash, base_index, &target_idx))
 #endif
     {
 #if !HASH_KEY_FIXED_LEN
@@ -761,9 +763,7 @@ CAT(hash_functions_sink_, HASH_TYPE)(void) {
 INLINE uint64
 hash_function(void *key, int32 key_length) {
     uint64 hash;
-    if (DEBUGGING) {
-        ASSERT_MORE(key_length, 0);
-    }
+    ASSERT_POSITIVE(key_length);
     hash = rapidhash(key, key_length);
     return hash;
 }
@@ -788,13 +788,45 @@ hash_length(void *map) {
 }
 
 #if DEBUGGING
+
+INLINE double
+hash_pow(double x, double n) {
+    double base = x;
+    double result = 1.0;
+    uint32 exponent;
+
+    ASSERT_MORE_EQUAL(n, 0.0);
+    ASSERT_LESS_EQUAL(n, (double)UINT32_MAX);
+    exponent = (uint32)n;
+    ASSERT_EQUAL((double)exponent, n);
+
+    while (exponent > 0) {
+        if (exponent & 1u) {
+            result *= base;
+        }
+        exponent >>= 1;
+        base *= base;
+    }
+
+    return result;
+}
+
+INLINE double
+hash_round(double x) {
+    if (x < 0.0) {
+        return (double)((int64)(x - 0.5));
+    }
+
+    return (double)((int64)(x + 0.5));
+}
+
 INLINE uint32
 hash_expected_collisions(void *map) {
     CommonMap *map2 = map;
     double n = map2->length;
     double m = map2->capacity;
-    double result = n - m*(1 - pow((m - 1) / m, n));
-    return (uint32)(round(result));
+    double result = n - m*(1 - hash_pow((m - 1) / m, n));
+    return (uint32)(hash_round(result));
 }
 #endif
 
@@ -802,10 +834,6 @@ hash_expected_collisions(void *map) {
 
 #if TESTING_hash && !defined(TESTING_hash_started)
 #define TESTING_hash_started
-
-#if !OS_UNIX
-#error "hash.c tests only work on unix systems"
-#endif
 
 // Have to add these declarations so that clangd does not complain
 struct Hash_map_by_value;
@@ -847,23 +875,23 @@ static String
 random_string(Arena *arena, uint32 nbytes) {
     char characters[] = "abcdefghijklmnopqrstuvwxyz1234567890";
     String string;
-    int32 len = (int32)(nbytes + (uint)rand() % 16u);
+    int32 len = (int32)(nbytes + (uint32)rand_int() % 16u);
     int32 size = len + 1;
 
     string.s = arena_push(arena, size);
 
     for (int32 i = 0; i < len; i += 1) {
-        int32 ci = (int32)((size_t)rand() % (sizeof(characters) - 1));
+        int32 ci = (int32)((uint32)rand_int()
+                           % (sizeof(characters) - 1));
         string.s[i] = characters[ci];
     }
     string.s[len] = '\0';
     string.len = len;
-    string.value = rand();
+    string.value = rand_int();
 
     return string;
 }
 
-// flags: -lm
 int
 main(void) {
     struct timespec t0;
@@ -878,6 +906,14 @@ main(void) {
 
     ASSERT(map);
     initial_capacity = map->capacity;
+
+#if DEBUGGING
+    ASSERT_EQUAL(hash_pow(2.0, 10.0), 1024.0);
+    ASSERT_EQUAL(hash_pow(0.5, 3.0), 0.125);
+    ASSERT_EQUAL(hash_round(1.49), 1.0);
+    ASSERT_EQUAL(hash_round(1.50), 2.0);
+    ASSERT_EQUAL(hash_round(-1.50), -2.0);
+#endif
 
     str1.len = strlen32(str1.s);
     str2.len = strlen32(str2.s);
@@ -902,7 +938,7 @@ main(void) {
 
     ASSERT(!hash_lookup_map(map, "does_not_exist", 14, &test));
 
-    srand(42);
+    rand_int_seed(42);
     for (uint32 i = 0; i < NSTRINGS; i += 1) {
         strings[i] = random_string(arena, NBYTES);
     }
@@ -927,9 +963,9 @@ main(void) {
     ASSERT_EQUAL(hash_ndeleted_map(map), 1);
 
     hash_zero_map(map);
-    ASSERT_EQUAL(hash_length(map), 0);
-    ASSERT_EQUAL(hash_ndeleted_map(map), 0);
-    ASSERT_EQUAL(map->occupied, 0);
+    ASSERT_ZERO(hash_length(map));
+    ASSERT_ZERO(hash_ndeleted_map(map));
+    ASSERT_ZERO(map->occupied);
 
     for (uint32 i = 0; i < 10; i += 1) {
         ASSERT(hash_insert_map(map,

@@ -75,30 +75,33 @@ allocations_unlock(void) {
 }
 #endif
 
-#define X64(FUNC) \
-CBASE_API_DEF void \
-CAT(FUNC, 64)(void *dest, void *source, int64 n) { \
-    if (n == 0) \
-        return; \
-    if (DEBUGGING) { \
-        if (n < 0) { \
-            error("Error: Invalid n = %lld\n", n); \
-            fatal(EXIT_FAILURE); \
-        } \
-        if ((ullong)n >= (ullong)SIZE_MAX) { \
+#define X64(FUNC)                                                 \
+void                                                \
+CAT(FUNC, 64)(void *dest, void *source, int64 n) {                \
+    if (n == 0) {                                                 \
+        return;                                                   \
+    }                                                             \
+    if (DEBUGGING) {                                              \
+        ASSERT(dest != NULL);                                     \
+        ASSERT(source != NULL);                                   \
+        if (n < 0) {                                              \
+            error("Error: Invalid n = %lld\n", n);                \
+            fatal(EXIT_FAILURE);                                  \
+        }                                                         \
+        if ((ullong)n >= (ullong)SIZE_MAX) {                      \
             error("Error: n (%lld) is bigger than SIZEMAX\n", n); \
-            fatal(EXIT_FAILURE); \
-        } \
-    } \
-    FUNC(dest, source, (size_t)n); \
-    return; \
+            fatal(EXIT_FAILURE);                                  \
+        }                                                         \
+    }                                                             \
+    FUNC(dest, source, (size_t)n);                                \
+    return;                                                       \
 }
 
 X64(memcpy)
 X64(memmove)
 #undef X64
 
-CBASE_API_DEF void
+void
 memset64(void *buffer, int value, int64 size) {
     if (size == 0) {
         return;
@@ -117,7 +120,7 @@ memset64(void *buffer, int value, int64 size) {
     return;
 }
 
-CBASE_API_DEF void *
+void *
 xmalloc(int64 size, bool zero) {
     void *p;
 
@@ -135,7 +138,7 @@ xmalloc(int64 size, bool zero) {
     return p;
 }
 
-CBASE_API_DEF void
+void
 memory_check(void) {
     if (RUNNING_ON_VALGRIND) {
         return;
@@ -189,7 +192,7 @@ memory_check(void) {
     return;
 }
 
-CBASE_API_DEF void *
+void *
 malloc_debug(char *file, int32 line, char *func, int64 size, bool zero) {
     void *p;
     uchar *ptr;
@@ -252,7 +255,7 @@ malloc_debug(char *file, int32 line, char *func, int64 size, bool zero) {
     return p;
 }
 
-CBASE_API_DEF void *
+void *
 xrealloc(void *old, int64 new_size) {
     void *p;
     uint64 old_save = (uint64)old;
@@ -278,7 +281,7 @@ xrealloc(void *old, int64 new_size) {
     return p;
 }
 
-CBASE_API_DEF void *
+void *
 realloc4(void *old, int64 old_capacity, int64 new_capacity, int64 obj_size) {
     int64 new_size = new_capacity*obj_size;
     (void)old_capacity;
@@ -286,7 +289,7 @@ realloc4(void *old, int64 old_capacity, int64 new_capacity, int64 obj_size) {
     return xrealloc(old, new_size);
 }
 
-CBASE_API_DEF void *
+void *
 realloc_debug(char *file, int32 line, char *func,
               void *old, int64 old_capacity, int64 new_capacity,
               int64 obj_size) {
@@ -442,7 +445,7 @@ realloc_debug(char *file, int32 line, char *func,
     return p;
 }
 
-CBASE_API_DEF void *
+void *
 realloc_flex_debug(char *file, int32 line, char *func,
                    void *old, int64 struct_size,
                    int64 old_capacity, int64 new_capacity, int64 obj_size) {
@@ -610,7 +613,7 @@ realloc_flex_debug(char *file, int32 line, char *func,
     return p;
 }
 
-CBASE_API_DEF void
+void
 free_debug(char *file, int32 line, char *func,
            void *pointer, int64 size) {
     DebugAllocInfo info;
@@ -701,7 +704,7 @@ free_debug(char *file, int32 line, char *func,
     return;
 }
 
-CBASE_API_DEF void
+void
 free2_(void *pointer, int64 size) {
     (void)size;
     if (pointer) {
@@ -747,7 +750,7 @@ memory_mapping_size(int64 size) {
 }
 
 #if OS_UNIX
-CBASE_API_DEF void *
+void *
 xmmap_commit(int64 *size) {
     void *p;
     int64 size_original = *size;
@@ -774,7 +777,7 @@ xmmap_commit(int64 *size) {
     }
     return p;
 }
-CBASE_API_DEF void
+void
 xmunmap(void *p, int64 size) {
     if (munmap(p, (size_t)size) < 0) {
         error("Error in munmap(%p, %lld): %s.\n",
@@ -784,7 +787,7 @@ xmunmap(void *p, int64 size) {
     return;
 }
 #elif OS_WINDOWS
-CBASE_API_DEF void *
+void *
 xmmap_commit(int64 *size) {
     void *p;
 
@@ -802,7 +805,7 @@ xmmap_commit(int64 *size) {
     }
     return p;
 }
-CBASE_API_DEF void
+void
 xmunmap(void *p, int64 size) {
     (void)size;
     if (RUNNING_ON_VALGRIND) {
@@ -815,7 +818,7 @@ xmunmap(void *p, int64 size) {
     return;
 }
 #else
-CBASE_API_DEF void *
+void *
 xmmap_commit(int64 *size) {
     void *p;
 
@@ -824,21 +827,21 @@ xmmap_commit(int64 *size) {
     memset64(p, 0, *size);
     return p;
 }
-CBASE_API_DEF void
+void
 xmunmap(void *p, int64 size) {
     free2(p, (int64)size);
     return;
 }
 #endif
 
-CBASE_API_DEF void *
+void *
 xmemdup(void *source, int64 size) {
     void *p = malloc2(size);
     memcpy64(p, source, size);
     return p;
 }
 
-CBASE_API_DEF char *
+char *
 xstrdup(char *string) {
     char *p;
     int64 length = strlen32(string) + 1;
@@ -853,7 +856,7 @@ xstrdup(char *string) {
     return p;
 }
 
-CBASE_API_DEF char *
+char *
 xstrndup(char *s, int64 n) {
     char *out = malloc2(n + 1);
     memcpy64(out, s, n);
@@ -876,17 +879,19 @@ memory_functions_sink(void) {
 #if TESTING_memory
 #define CBASE_IMPLEMENT
 #include "cbase.h"
-// flags: -lm
 
+#if OS_LINUX
 static sigjmp_buf test_jump_env;
 static bool caught_expected_fail = false;
 
-static void __attribute((noreturn))
+static noreturn void
 test_expected_fail_handler(int sig) {
     (void)sig;
     caught_expected_fail = true;
     siglongjmp(test_jump_env, 1);
 }
+
+#endif
 
 typedef struct TestFlex {
     int32 count;
@@ -916,15 +921,6 @@ typedef struct TestString {
 } while (0)
 
 int main(void) {
-    struct sigaction sa = {0};
-    sa.sa_handler = test_expected_fail_handler;
-    sigemptyset(&sa.sa_mask);
-
-    if (sigaction(SIGILL, &sa, NULL) != 0) {
-        perror("sigaction");
-        return EXIT_FAILURE;
-    }
-
     printf("--- Starting Comprehensive Memory Tests ---\n");
 
     {
@@ -933,8 +929,8 @@ int main(void) {
 
         mapping = xmmap_commit(&size);
         ASSERT_MORE(size, 1);
-        ASSERT_EQUAL(size % memory_page_size, 0);
-        ASSERT_EQUAL(mapping[0], 0);
+        ASSERT_ZERO(size % memory_page_size);
+        ASSERT_ZERO(mapping[0]);
         xmunmap(mapping, size);
     }
 
@@ -1028,7 +1024,7 @@ int main(void) {
 
         mem_dup = xmemdup(dup, len);
         ASSERT(mem_dup != dup);
-        ASSERT(memcmp(mem_dup, dup, (size_t)len) == 0);
+        ASSERT_ZERO(memcmp(mem_dup, dup, (size_t)len));
         printf("xmemdup successful.\n");
 
         free2(dup, len);
@@ -1070,7 +1066,7 @@ int main(void) {
         printf("Starting High-Volume Variable String Stress Tests.\n");
         v_strings = malloc2(num_strings*SIZEOF(*v_strings));
 
-        srand(1337);
+        rand_int_seed(1337);
         for (int32 i = 0; i < num_strings; i += 1) {
             char stack_buf[128];
             int32 v_len = random_ascii_string(stack_buf,
@@ -1107,6 +1103,16 @@ int main(void) {
     // this block has to execute last,
     // because it leaves garbage still to be detected
     printf("\n--- Starting Failure Case Tests ---\n");
+
+    struct sigaction sa = {0};
+    sa.sa_handler = test_expected_fail_handler;
+    sigemptyset(&sa.sa_mask);
+
+    if (sigaction(SIGILL, &sa, NULL) != 0) {
+        perror("sigaction");
+        return EXIT_FAILURE;
+    }
+
 
     {
         void *untracked = (void *)0xDEADBEEF;
@@ -1228,10 +1234,10 @@ int main(void) {
         allocations_unlock();
         free(p - MEMORY_PADDING);
     }
-#endif
 
     fsync(STDOUT_FILENO);
     fsync(STDERR_FILENO);
+#endif
     printf("\nAll memory tests passed.\n");
     return EXIT_SUCCESS;
 }

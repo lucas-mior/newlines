@@ -4,8 +4,8 @@ Alternative description:
 "stuff that a sane programming language would provide by default".
 
 ## Usage (except include-based files)
-- users of cbase shall `#include "cbase.h"`.
-- one of the files shall `#define CBASE_IMPLEMENT` before including `cbase.h`
+- users of cbase shall `#include "cbase.h"` before ANY OTHER INCLUDES.
+- one of the files shall `#define CBASE_IMPLEMENT 1` before including `cbase.h`
 
 ## Usage for include-based files like hash.c and xenums.c
 - the user must first have `#included "cbase.h" before continuing
@@ -17,7 +17,7 @@ Alternative description:
 `cbase.h` itself does not depends on.
 In other words, files that get only included when `CBASE_IMPLEMENT` is defined,
 are ok to include `cbase.h` themselves. However, files that `cbase.h` must
-always include like `memory.h`, or `assert.c`, must NOT include `cbase.h`, or
+always include like `memory.h`, or `assertion.c`, must NOT include `cbase.h`, or
 the build will break. Those files shall include the follwing basic headers
 instead as needed:
 
@@ -26,8 +26,15 @@ instead as needed:
 - `primitives.h`
 - `base_macros.h`
 
-However, when testing files like assert.c, it is ok and necessary to `#define
-CBASE_IMPLEMENT` and `#include "cbase.h"` so that the test compilation unit
+Also, sometimes we need to use a separate translation unit for wrapping a stupid
+library that does not use proper name space convention. In this case, *do not*
+include "cbase.h" from the wrapper. You may include the files above, and fix any
+name collision that ends up happening. For instance, harfbuzz library defined a
+macro called SIZEOF. (Really? They really couldn't have used HB_SIZEOF, I
+guess).
+
+However, when testing files like assertion.c, it is ok and necessary to `#define
+CBASE_IMPLEMENT 1` and `#include "cbase.h"` so that the test compilation unit
 works. But this must be done inside `#if TESTING_` block.
 
 ## Sadness
@@ -35,15 +42,13 @@ Code compiling utf8.c depends on `-D_XOPEN_SOURCE=700` because of `wcwidth`.
 cbase in general depends on `-D_DEFAULT_SOURCE`.
 
 ## Alternative usage: compile cbase as a separate object
-NOTE: it does not work yet, because all cbase functions are declared static.
-
 ```sh
-gcc -DCBASE_IMPLEMENT -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=700 -x c -c cbase.h -o cbase.o 
-gcc cbase_main_separate_object.c cbase.o
+cc -std=c11 -D_DEFAULT_SOURCE -D_XOPEN_SOURCE=700 -c cbase.c -o cbase.o 
+cc -std=c11 your_main.c cbase.o
 ```
 
 ## Infrastructure
-Every C file in cbase/ must have block for avoid unused function warnings when
+Every .c file in cbase/ must have block for avoid unused function warnings when
 not testing that specific file. This allows to still see which functions are not
 being tested, without warnings if a specific project does not use all the
 functions of cbase/.
