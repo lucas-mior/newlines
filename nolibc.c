@@ -867,32 +867,10 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 #if TESTING_nolibc
 int
 main(void) {
-    long mmap_return_value = 0;
-    char *mapped_memory = 0;
-    long munmap_return_value = 0;
-    mmap_return_value = mmap((void *)0, 1000ll*1000ll*10ll*1ll,
-                             PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
-    if (mmap_return_value < 0 && mmap_return_value > -4096) {
-        char *message = strerror(-mmap_return_value);
-        int message_len = strlen(message);
+    {
+        char *dir_name = "dummy_test_dir";
 
-        write(STDOUT_FILENO, message, message_len + 1);
-        fsync(STDOUT_FILENO);
-        TRAP();
-    }
-    write(STDOUT_FILENO, "mmap is nice", strlen("mmap is nice"));
-
-    mapped_memory = (char *)mmap_return_value;
-    mapped_memory[0] = 't';
-    if (mapped_memory[0] != 't') {
-        exit(EXIT_FAILURE);
-    }
-
-    mprotect(mapped_memory, 4096, PROT_READ|PROT_WRITE);
-
-    munmap_return_value = munmap((void *)mmap_return_value, 4096);
-    if (munmap_return_value < 0) {
-        exit(EXIT_FAILURE);
+        rmdir(dir_name);
     }
 
     {
@@ -943,6 +921,10 @@ main(void) {
         long lseek_return_value = 0;
         char read_buffer[5] = {0};
         long read_success = 0;
+        long mmap_return_value = 0;
+        char *mapped_memory = 0;
+        long mprotect_return_value = 0;
+        long munmap_return_value = 0;
         long close_return_value = 0;
         long unlink_return_value = 0;
 
@@ -962,6 +944,28 @@ main(void) {
 
         read_success = read(fd, read_buffer, 5);
         if (read_success < 0) {
+            exit(EXIT_FAILURE);
+        }
+
+        mmap_return_value = mmap((void *)0, 4096, PROT_READ, MAP_PRIVATE,
+                                 fd, 0);
+        if (mmap_return_value < 0) {
+            exit(EXIT_FAILURE);
+        }
+
+        mapped_memory = (char *)mmap_return_value;
+        if (mapped_memory[0] != 't') {
+            exit(EXIT_FAILURE);
+        }
+
+        mprotect_return_value = mprotect(mapped_memory, 4096,
+                                         PROT_READ|PROT_WRITE);
+        if (mprotect_return_value < 0) {
+            exit(EXIT_FAILURE);
+        }
+
+        munmap_return_value = munmap((void *)mmap_return_value, 4096);
+        if (munmap_return_value < 0) {
             exit(EXIT_FAILURE);
         }
 
@@ -1099,7 +1103,8 @@ main(void) {
             exit(0);
         }
 
-        waitid_return_value = waitid(1, (int)child_pid, siginfo_buffer, 4, (void *)0);
+        waitid_return_value = waitid(1, (int)child_pid, siginfo_buffer, 4,
+                                     (void *)0);
         if (waitid_return_value < 0) {
             exit(EXIT_FAILURE);
         }
@@ -1294,7 +1299,8 @@ main(void) {
     {
         struct stat stat_buffer = {0};
         char *dir_name = ".";
-        long newfstatat_return_value = newfstatat(-100, dir_name, &stat_buffer, 0);
+        long newfstatat_return_value = newfstatat(-100, dir_name,
+                                                  &stat_buffer, 0);
 
         if (newfstatat_return_value < 0) {
             exit(EXIT_FAILURE);
@@ -1304,7 +1310,8 @@ main(void) {
     {
         struct stat stat_buffer = {0};
         char *dir_name = ".";
-        long fstatat64_return_value = fstatat64(-100, dir_name, &stat_buffer, 0);
+        long fstatat64_return_value = fstatat64(-100, dir_name,
+                                                &stat_buffer, 0);
 
         if (fstatat64_return_value < 0) {
             exit(EXIT_FAILURE);
@@ -1321,7 +1328,22 @@ main(void) {
         }
     }
 
-    return 0;
+    {
+        long mmap_return_value = mmap((void *)0, 4096,
+                                      PROT_READ|PROT_WRITE,
+                                      MAP_ANONYMOUS, -1, 0);
+
+        if (mmap_return_value < 0 && mmap_return_value > -4096) {
+            char *message = strerror(-mmap_return_value);
+            int message_len = strlen(message);
+
+            write(STDOUT_FILENO, message, message_len + 1);
+            fsync(STDOUT_FILENO);
+            TRAP();
+        }
+
+        exit(EXIT_FAILURE);
+    }
 }
 #endif /* TESTING_nolibc */
 
