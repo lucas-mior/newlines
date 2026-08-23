@@ -4,6 +4,8 @@
 #include <sys/syscall.h>
 #include <asm/stat.h>
 #include <linux/mman.h>
+#define _SYS_MMAN_H
+#include </usr/include/bits/mman-linux.h>
 
 typedef __SIZE_TYPE__ size_t;
 typedef long ssize_t;
@@ -12,9 +14,12 @@ typedef unsigned int uint;
 
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
-#define MAP_FAILED ((void *)-1)
+#define STDIN_FILENO 0
 #define STDOUT_FILENO 1
-#define TRAP() __builtin_trap()
+#define STDERR_FILENO 2
+
+/* #define TRAP() __builtin_trap() */
+#define TRAP() *(volatile int *)0 = 1;
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_nolibc 1
@@ -41,6 +46,108 @@ static long syscall3(long n, long a1, long a2, long a3);
 static long syscall4(long n, long a1, long a2, long a3, long a4);
 static long syscall5(long n, long a1, long a2, long a3, long a4, long a5);
 static long syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6);
+
+char *
+strerror(int errnum) {
+    static char *err_strs[] = {
+        "Success",                          /* 0 */
+        "Operation not permitted",          /* 1  (EPERM) */
+        "No such file or directory",        /* 2  (ENOENT) */
+        "No such process",                  /* 3  (ESRCH) */
+        "Interrupted system call",          /* 4  (EINTR) */
+        "Input/output error",               /* 5  (EIO) */
+        "No such device or address",        /* 6  (ENXIO) */
+        "Argument list too long",           /* 7  (E2BIG) */
+        "Exec format error",                /* 8  (ENOEXEC) */
+        "Bad file descriptor",              /* 9  (EBADF) */
+        "No child processes",               /* 10 (ECHILD) */
+        "Resource temporarily unavailable", /* 11 (EAGAIN) */
+        "Cannot allocate memory",           /* 12 (ENOMEM) */
+        "Permission denied",                /* 13 (EACCES) */
+        "Bad address",                      /* 14 (EFAULT) */
+        "Block device required",            /* 15 (ENOTBLK) */
+        "Device or resource busy",          /* 16 (EBUSY) */
+        "File exists",                      /* 17 (EEXIST) */
+        "Invalid cross-device link",        /* 18 (EXDEV) */
+        "No such device",                   /* 19 (ENODEV) */
+        "Not a directory",                  /* 20 (ENOTDIR) */
+        "Is a directory",                   /* 21 (EISDIR) */
+        "Invalid argument",                 /* 22 (EINVAL) */
+        "Too many open files in system",    /* 23 (ENFILE) */
+        "Too many open files",              /* 24 (EMFILE) */
+        "Inappropriate ioctl for device",   /* 25 (ENOTTY) */
+        "Text file busy",                   /* 26 (ETXTBSY) */
+        "File too large",                   /* 27 (EFBIG) */
+        "No space left on device",          /* 28 (ENOSPC) */
+        "Illegal seek",                     /* 29 (ESPIPE) */
+        "Read-only file system",            /* 30 (EROFS) */
+        "Too many links",                   /* 31 (EMLINK) */
+        "Broken pipe",                      /* 32 (EPIPE) */
+        "Numerical argument out of domain", /* 33 (EDOM) */
+        "Numerical result out of range"     /* 34 (ERANGE) */
+    };
+    int max_err;
+    
+    max_err = sizeof(err_strs) / sizeof(err_strs[0]);
+    
+    if (errnum < 0) {
+        return "Unknown error";
+    }
+    
+    if (errnum >= max_err) {
+        return "Unknown error";
+    }
+    
+    return err_strs[errnum];
+}
+
+int
+strlen(char *str) {
+    int len = 0;
+    while (*str++) {
+        len += 1;
+    }
+    return len;
+}
+
+int
+itoa2(char *str, int size, long long num) {
+    unsigned long long magnitude;
+    int i = 0;
+    int negative = 0;
+
+    if (size < 22) {
+        return 0;
+    }
+
+    if (num < 0) {
+        negative = 1;
+        magnitude = (unsigned long long)(-(num + 1)) + 1;
+    } else {
+        magnitude = (unsigned long long)num;
+    }
+
+    do {
+        str[i] = (char)(magnitude % 10 + '0');
+        i += 1;
+        magnitude /= 10;
+    } while (magnitude > 0);
+
+    if (negative) {
+        str[i] = '-';
+        i += 1;
+    }
+
+    str[i] = '\0';
+
+    for (long j = 0; j < i / 2; j += 1) {
+        char temp = str[j];
+        str[j] = str[i - j - 1];
+        str[i - j - 1] = temp;
+    }
+
+    return i;
+}
 
 void __attribute__((noreturn))
 exit(int exit_code) {
@@ -74,9 +181,12 @@ lseek(int file_descriptor, long offset, int whence) {
     return syscall3(SYS_lseek, file_descriptor, offset, whence);
 }
 
-void *
+long
 mmap(void *address, size_t length, int protection, int flags, int file_descriptor, long offset) {
-    return (void *)syscall6(SYS_mmap, (long)address, length, protection, flags, file_descriptor, offset);
+    long result = syscall6(SYS_mmap, (long)address,
+                           length, protection,
+                           flags, file_descriptor, offset);
+    return result;
 }
 
 int
@@ -751,11 +861,39 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 #error "Only x86-64 linux is supported"
 #endif
 
+
 // flags: -fpermissive -nostdlib -static -fno-stack-protector -fno-builtin
 // flags: -g2 -O3 -Wall -Wextra
 #if TESTING_nolibc
 int
 main(void) {
+    long mmap_return_value = 0;
+    char *mapped_memory = 0;
+    long munmap_return_value = 0;
+    mmap_return_value = mmap((void *)0, 1000ll*1000ll*10ll*1ll,
+                             PROT_READ|PROT_WRITE, MAP_ANONYMOUS, -1, 0);
+    if (mmap_return_value < 0 && mmap_return_value > -4096) {
+        char *message = strerror(-munmap_return_value);
+        int message_len = strlen(message);
+
+        write(STDOUT_FILENO, message, message_len + 1);
+        fsync(STDOUT_FILENO);
+        TRAP();
+    }
+    write(STDOUT_FILENO, "mmap is nice", strlen("mmap is nice"));
+
+    mapped_memory = (char *)mmap_return_value;
+    if (mapped_memory[0] != 't') {
+        exit(EXIT_FAILURE);
+    }
+
+    mprotect(mapped_memory, 4096, PROT_READ|PROT_WRITE);
+
+    munmap_return_value = munmap((void *)mmap_return_value, 4096);
+    if (munmap_return_value < 0) {
+        exit(EXIT_FAILURE);
+    }
+
     {
         long process_id = syscall0(SYS_getpid);
         long kill_return_value = 0;
@@ -804,9 +942,6 @@ main(void) {
         long lseek_return_value = 0;
         char read_buffer[5] = {0};
         long read_success = 0;
-        void *mmap_return_value = 0;
-        char *mapped_memory = 0;
-        long munmap_return_value = 0;
         long close_return_value = 0;
         long unlink_return_value = 0;
 
@@ -826,23 +961,6 @@ main(void) {
 
         read_success = read(fd, read_buffer, 5);
         if (read_success < 0) {
-            exit(EXIT_FAILURE);
-        }
-
-        mmap_return_value = mmap((void *)0, 4096, 1, 1, fd, 0);
-        if (mmap_return_value == MAP_FAILED) {
-            exit(EXIT_FAILURE);
-        }
-
-        mapped_memory = (char *)mmap_return_value;
-        if (mapped_memory[0] != 't') {
-            exit(EXIT_FAILURE);
-        }
-
-        mprotect(mapped_memory, 4096, PROT_READ|PROT_WRITE);
-
-        munmap_return_value = munmap((void *)mmap_return_value, 4096);
-        if (munmap_return_value < 0) {
             exit(EXIT_FAILURE);
         }
 
