@@ -871,9 +871,9 @@ main(void) {
     char *mapped_memory = 0;
     long munmap_return_value = 0;
     mmap_return_value = mmap((void *)0, 1000ll*1000ll*10ll*1ll,
-                             PROT_READ|PROT_WRITE, MAP_ANONYMOUS, -1, 0);
+                             PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
     if (mmap_return_value < 0 && mmap_return_value > -4096) {
-        char *message = strerror(-munmap_return_value);
+        char *message = strerror(-mmap_return_value);
         int message_len = strlen(message);
 
         write(STDOUT_FILENO, message, message_len + 1);
@@ -883,6 +883,7 @@ main(void) {
     write(STDOUT_FILENO, "mmap is nice", strlen("mmap is nice"));
 
     mapped_memory = (char *)mmap_return_value;
+    mapped_memory[0] = 't';
     if (mapped_memory[0] != 't') {
         exit(EXIT_FAILURE);
     }
