@@ -11,8 +11,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "cbase/base_macros.h"
-
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_nolibc 1
 #elif !defined(TESTING_nolibc)
