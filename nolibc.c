@@ -1,15 +1,20 @@
 #if !defined(NOLIBC_C)
 #define NOLIBC_C
 
-#define const
-#include "cbase.h"
-
 #include <sys/syscall.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <asm/stat.h>
+#include <linux/mman.h>
+
+typedef __SIZE_TYPE__ size_t;
+typedef long ssize_t;
+typedef unsigned int mode_t;
+typedef unsigned int uint;
+
+#define EXIT_SUCCESS 0
+#define EXIT_FAILURE 1
+#define MAP_FAILED ((void *)-1)
+#define STDOUT_FILENO 1
+#define TRAP() __builtin_trap()
 
 #if defined(__INCLUDE_LEVEL__) && (__INCLUDE_LEVEL__ == 0)
 #define TESTING_nolibc 1
@@ -84,7 +89,7 @@ mprotect(void *address, size_t length, int protection) {
     return syscall3(SYS_mprotect, (long)address, length, protection);
 }
 
-int __attribute__((always_inline))
+int
 brk(void *address) {
     return syscall1(SYS_brk, (long)address);
 }
@@ -746,7 +751,8 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 #error "Only x86-64 linux is supported"
 #endif
 
-// flags: -fpermissive -nostdlib -static -fno-stack-protector -g2 -O3 -Wall -Wextra
+// flags: -fpermissive -nostdlib -static -fno-stack-protector -fno-builtin
+// flags: -g2 -O3 -Wall -Wextra
 #if TESTING_nolibc
 int
 main(void) {

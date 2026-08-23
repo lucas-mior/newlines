@@ -1,4 +1,3 @@
-#include <unistd.h>
 #include "nolibc.c"
 
 #if defined(__GNUC__) || defined(__INTEL_COMPILER) || defined(__clang__)
