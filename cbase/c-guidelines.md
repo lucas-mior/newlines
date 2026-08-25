@@ -436,7 +436,8 @@ pattern, but using `fork()` directly should be avoided anyway (use the
       if ((b = may_fail2()) < 0) {
           break;
       }
-  }
+      do_something(a, b);
+  } while (0);
   ```
 
 ### Return value for errors
