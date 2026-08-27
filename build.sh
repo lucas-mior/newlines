@@ -63,6 +63,11 @@ case "$target" in
     CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
     exe="bin/newlines_amd64_debug"
     ;;
+"debug-fast")
+    CFLAGS_AMD64="$CFLAGS_AMD64 $GNUSOURCE -g2 -O3"
+    CPPFLAGS="$CPPFLAGS -DDEBUGGING=1"
+    exe="bin/newlines_amd64_debug_fast"
+    ;;
 "test")
     CFLAGS_AMD64="$CFLAGS_AMD64 -g3 -O0"
     CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
