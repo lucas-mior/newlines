@@ -40,7 +40,6 @@ CPPFLAGS="$CPPFLAGS -Dconst= -DNOLIBC=1"
 CFLAGS="$CFLAGS -fpermissive"
 CFLAGS_AMD64="$CFLAGS_AMD64 -nostdlib -static -fno-stack-protector"
 CFLAGS_AMD64="$CFLAGS_AMD64 -fno-builtin"
-CFLAGS_AMD64="$CFLAGS_AMD64 -Wall -Wextra"
 LDFLAGS="$LDFLAGS"
 
 OS=$(uname -a)
