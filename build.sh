@@ -2,31 +2,40 @@
 
 # shellcheck disable=SC2086
 
-set -e
+dir=$(dirname "$(readlink -f "$0")")
+cd "$dir" || exit
 
-error () {
-    >&2 printf "$@"
-    return
-}
-
-if [ -n "$BASH_VERSION" ]; then
-    # shellcheck disable=SC3044
-    shopt -s expand_aliases
+newlines_test_exclude_pattern='(^|/)(newlines_amd64|nolibc)\.c$'
+newlines_old_test_exclude_pattern=${TEST_EXCLUDE_PATTERN-}
+newlines_had_test_exclude_pattern=${TEST_EXCLUDE_PATTERN+x}
+if [ -n "${TEST_EXCLUDE_PATTERN:-}" ]; then
+    TEST_EXCLUDE_PATTERN="$newlines_test_exclude_pattern|$TEST_EXCLUDE_PATTERN"
+else
+    TEST_EXCLUDE_PATTERN=$newlines_test_exclude_pattern
 fi
 
-alias trace_on='set -x'
-alias trace_off='{ set +x; } 2>/dev/null'
+# shellcheck source=./cbase/common.sh
+. "./cbase/common.sh"
 
-dir=$(dirname "$(readlink -f "$0")")
-CPPFLAGS="$CPPFLAGS -I$dir/cbase"
-cd "$dir" || exit
-program=$(basename "$(readlink -f "$(dirname "$0")")")
+if [ "$newlines_had_test_exclude_pattern" = x ]; then
+    TEST_EXCLUDE_PATTERN=$newlines_old_test_exclude_pattern
+else
+    unset TEST_EXCLUDE_PATTERN
+fi
+
+program=$(common_get_program "$0")
 script=$(basename "$0")
-target="${1:-build}"
+common_build_parse_args "$@"
 
-printf "
-${script} ${RED}${1:-} ${2:-}$RES
-"
+case "$mode" in
+build|check|debug|debug-fast|fast_feedback|install|test|uninstall)
+    ;;
+*)
+    common_build_unknown_mode
+    ;;
+esac
+
+common_build_print_invocation "$script"
 
 PREFIX="${PREFIX:-/usr/local}"
 DESTDIR="${DESTDIR:-/}"
@@ -36,6 +45,7 @@ main_amd64="newlines_amd64.c"
 exe="bin/newlines_amd64"
 mkdir -p "$(dirname "$exe")"
 
+CPPFLAGS="$CPPFLAGS -I$dir/cbase"
 CPPFLAGS="$CPPFLAGS -Dconst= -DNOLIBC=1"
 CFLAGS="$CFLAGS -fpermissive"
 CFLAGS_AMD64="$CFLAGS_AMD64 -nostdlib -static -fno-stack-protector"
@@ -50,13 +60,9 @@ if echo "$OS" | grep -q "Linux"; then
     fi
 fi
 
-if [ "$target" = "test" ] && [ -z "${CC:-}" ] && command -v tcc >/dev/null 2>&1; then
-    CC=tcc
-else
-    CC="${CC:-cc}"
-fi
+CC=$(common_get_compiler "$mode")
 
-case "$target" in
+case "$mode" in
 "debug")
     CFLAGS_AMD64="$CFLAGS_AMD64 -g3 -O0"
     CPPFLAGS="$CPPFLAGS $GNUSOURCE -DDEBUGGING=1"
@@ -81,23 +87,9 @@ case "$target" in
 "install"|"uninstall")
     ;;
 *)
-    CFLAGS_AMD64="$CFLAGS_AMD64 -O2"
+    common_build_unknown_mode
     ;;
 esac
-
-build_tags () {
-    if command -v ctags >/dev/null 2>&1; then
-        find . -iname "*.[ch]" -print0             | xargs -0 ctags --kinds-C=+l+d 2> /dev/null || true
-    fi
-
-    if [ -f tags ] && command -v vtags.sed >/dev/null 2>&1; then
-        vtags.sed tags | sort | uniq > .tags.vim 2> /dev/null || true
-    fi
-}
-
-option_remove() {
-    echo "$1" | sed -E "s| *$2 +| |g"
-}
 
 with_toy_cc () {
     compiler="$1"
@@ -116,7 +108,7 @@ with_toy_cc () {
             printf "
 Removing argument %s...
 " "$arg"
-            args=$(option_remove "$args" "$arg")
+            args=$(common_option_remove "$args" "$arg")
         else
             printf "
 
@@ -134,7 +126,7 @@ Error compiling with %s:
     return 0
 }
 build_program () {
-    build_tags
+    common_build_tags
     trace_on
     $CC $CPPFLAGS $CFLAGS $CFLAGS_AMD64 "$main_amd64" -o "$exe" $LDFLAGS
     trace_off
@@ -168,7 +160,7 @@ testing () {
         cmdline="$cmdline $flags -o $test_exe $src"
 
         if [ "$CC" = "chibicc" ]; then
-            cmdline_no_cc=$(option_remove "$cmdline" "$CC")
+            cmdline_no_cc=$(common_option_remove "$cmdline" "$CC")
             trace_on
             if with_toy_cc "$CC" "$cmdline_no_cc"; then
                 "$test_exe"
@@ -190,7 +182,7 @@ testing () {
     done
 }
 
-case "$target" in
+case "$mode" in
 "fast_feedback")
     build_program
     "$exe" 2
@@ -221,7 +213,7 @@ case "$target" in
     install -Dm755 "$exe" "${DESTDIR}${PREFIX}/bin/newlines_amd64"
     trace_off
     ;;
-*)
+build|debug|debug-fast)
     build_program
     "$exe" 2
     ;;
