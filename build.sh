@@ -70,7 +70,7 @@ case "$mode" in
     ;;
 "debug-fast")
     CFLAGS_AMD64="$CFLAGS_AMD64 $GNUSOURCE -g2 -O3"
-    CFLAGS_AMD64="$CFLAGS_AMD64 -fsanitize=undefined"
+    CFLAGS_AMD64="$CFLAGS_AMD64 -fsanitize-trap=undefined"
     CFLAGS_AMD64="$CFLAGS_AMD64 -fsanitize-undefined-trap-on-error"
     CPPFLAGS="$CPPFLAGS -DDEBUGGING=1"
     exe="bin/newlines_amd64_debug_fast"
