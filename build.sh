@@ -200,6 +200,7 @@ case "$mode" in
     CFLAGS="$CFLAGS -Wno-unused-command-line-argument"
     CFLAGS="$CFLAGS -fno-color-diagnostics"
     CC=clang CFLAGS="$CFLAGS" "$0" build
+    echo "static analysis finished."
     exit
     ;;
 "uninstall")
