@@ -12,6 +12,7 @@ typedef long ssize_t;
 typedef unsigned int mode_t;
 typedef unsigned int uint;
 
+#define SIZEOF(...) ((long)sizeof(__VA_ARGS__))
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 #define STDIN_FILENO 0
@@ -45,7 +46,8 @@ static long syscall2(long n, long a1, long a2);
 static long syscall3(long n, long a1, long a2, long a3);
 static long syscall4(long n, long a1, long a2, long a3, long a4);
 static long syscall5(long n, long a1, long a2, long a3, long a4, long a5);
-static long syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6);
+static long syscall6(long n, long a1, long a2, long a3, long a4, long a5,
+                     long a6);
 
 char *
 strerror(int errnum) {
@@ -84,28 +86,30 @@ strerror(int errnum) {
         "Too many links",                   /* 31 (EMLINK) */
         "Broken pipe",                      /* 32 (EPIPE) */
         "Numerical argument out of domain", /* 33 (EDOM) */
-        "Numerical result out of range"     /* 34 (ERANGE) */
+        "Numerical result out of range",    /* 34 (ERANGE) */
     };
     int max_err;
-    
-    max_err = sizeof(err_strs) / sizeof(err_strs[0]);
-    
+
+    max_err = SIZEOF(err_strs) / SIZEOF(err_strs[0]);
+
     if (errnum < 0) {
         return "Unknown error";
     }
-    
+
     if (errnum >= max_err) {
         return "Unknown error";
     }
-    
+
     return err_strs[errnum];
 }
 
 int
 strlen(char *str) {
     int len = 0;
-    while (*str++) {
+
+    while (*str != '\0') {
         len += 1;
+        str += 1;
     }
     return len;
 }
@@ -182,7 +186,8 @@ lseek(int file_descriptor, long offset, int whence) {
 }
 
 long
-mmap(void *address, size_t length, int protection, int flags, int file_descriptor, long offset) {
+mmap(void *address, size_t length, int protection, int flags,
+     int file_descriptor, long offset) {
     long result = syscall6(SYS_mmap, (long)address,
                            length, protection,
                            flags, file_descriptor, offset);
@@ -351,17 +356,20 @@ fstatfs64(int fd, void *buf) {
 
 int
 newfstatat(int dirfd, char *pathname, struct stat *statbuf, int flags) {
-    return syscall4(SYS_newfstatat, dirfd, (long)pathname, (long)statbuf, flags);
+    return syscall4(SYS_newfstatat, dirfd, (long)pathname, (long)statbuf,
+                    flags);
 }
 
 int
 fstatat64(int dirfd, char *pathname, struct stat *statbuf, int flags) {
-    return syscall4(SYS_newfstatat, dirfd, (long)pathname, (long)statbuf, flags);
+    return syscall4(SYS_newfstatat, dirfd, (long)pathname, (long)statbuf,
+                    flags);
 }
 
 int
 statx(int dirfd, char *pathname, int flags, uint mask, void *statxbuf) {
-    return syscall5(SYS_statx, dirfd, (long)pathname, flags, mask, (long)statxbuf);
+    return syscall5(SYS_statx, dirfd, (long)pathname, flags, mask,
+                    (long)statxbuf);
 }
 
 uint
@@ -506,17 +514,17 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // TODO: syscalls
 // _llseek
 // _newselect
-// accept                      
+// accept
 // accept4
 // acct
 // add_key
 // adjtimex
-// arch_prctl                  
-// bind                       
+// arch_prctl
+// bind
 // bpf
 // capget
 // capset
-// chown                      
+// chown
 // chown32
 // clock_adjtime
 // clock_getres
@@ -526,7 +534,7 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // clone
 // clone3
 // close_range
-// connect                    
+// connect
 // copy_file_range
 // creat
 // delete_module
@@ -580,7 +588,7 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // getgroups
 // getgroups32
 // getitimer
-// getpeername            
+// getpeername
 // getpgid
 // getpgrp
 // getpriority
@@ -592,8 +600,8 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // getrlimit
 // getrusage
 // getsid
-// getsockname                     
-// getsockopt                     
+// getsockname
+// getsockopt
 // gettid
 // gettimeofday
 // getuid32
@@ -625,12 +633,12 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // landlock_add_rule
 // landlock_create_ruleset
 // landlock_restrict_self
-// lchown                             
+// lchown
 // lchown32
 // lgetxattr
 // link
 // linkat
-// listen                            
+// listen
 // listxattr
 // llistxattr
 // lookup_dcookie
@@ -661,10 +669,10 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // mq_timedsend
 // mq_unlink
 // mremap
-// msgctl                             
-// msgget                            
-// msgrcv                           
-// msgsnd                          
+// msgctl
+// msgget
+// msgrcv
+// msgsnd
 // msync
 // munlock
 // munlockall
@@ -675,14 +683,14 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // oldlstat
 // oldolduname
 // oldstat
-// oldumount                     
+// oldumount
 // olduname
 // open_by_handle_at
 // open_tree
 // openat
 // openat2
 // pause
-// perf_event_open                 
+// perf_event_open
 // personality
 // pidfd_getfd
 // pidfd_send_signal
@@ -695,7 +703,7 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // poll
 // ppoll
 // prctl
-// pread64                         
+// pread64
 // preadv
 // preadv2
 // prlimit64
@@ -704,7 +712,7 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // process_vm_writev
 // pselect6
 // ptrace
-// pwrite64                        
+// pwrite64
 // pwritev
 // pwritev2
 // quotactl
@@ -715,9 +723,9 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // readlinkat
 // readv
 // reboot
-// recv                             
-// recvfrom                        
-// recvmsg                        
+// recv
+// recvfrom
+// recvmsg
 // recvmmsg
 // removexattr
 // renameat
@@ -740,7 +748,7 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // sched_getparam
 // sched_getscheduler
 // sched_rr_get_interval
-// sched_set_affinity         
+// sched_set_affinity
 // sched_setaffinity
 // sched_setattr
 // sched_setparam
@@ -748,16 +756,16 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // sched_yield
 // seccomp
 // select
-// semctl                    
-// semget                   
-// semop                   
+// semctl
+// semget
+// semop
 // semtimedop
-// send                    
+// send
 // sendfile
 // sendfile64
 // sendmmsg
-// sendmsg                
-// sendto                
+// sendmsg
+// sendto
 // set_mempolicy
 // set_robust_list
 // set_thread_area
@@ -775,7 +783,7 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // setitimer
 // setns
 // setpgid
-// setpgrp                     
+// setpgrp
 // setpriority
 // setregid
 // setregid32
@@ -787,17 +795,17 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // setreuid32
 // setrlimit
 // setsid
-// setsockopt                 
+// setsockopt
 // settimeofday
 // setuid
 // setuid32
 // setxattr
 // sgetmask
-// shmat                     
-// shmctl                   
-// shmdt                   
-// shmget                 
-// shutdown              
+// shmat
+// shmctl
+// shmdt
+// shmget
+// shutdown
 // sigaction
 // sigaltstack
 // signal
@@ -807,9 +815,9 @@ syscall6(long n, long a1, long a2, long a3, long a4, long a5, long a6) {
 // sigprocmask
 // sigreturn
 // sigsuspend
-// socket                
+// socket
 // socketcall
-// socketpair          
+// socketpair
 // splice
 // ssetmask
 // stime
@@ -916,7 +924,7 @@ main(void) {
     {
         char *file_name = "dummy_file.txt";
         long fd = open(file_name, 66, 0666);
-        char write_buffer[5] = {'t', 'e', 's', 't', '\n'};
+        char write_buffer[5] = {'t', 'e', 's', 't', '\n',};
         long write_success = 0;
         long lseek_return_value = 0;
         char read_buffer[5] = {0};

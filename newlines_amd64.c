@@ -6,16 +6,6 @@
 #define UNLIKELY(x) (x)
 #endif
 
-static inline __attribute__((always_inline)) int 
-atoi2(const char *s) {
-    int v = 0;
-    while (*s >= '0' && *s <= '9') {
-        v = v*10 + (*s - '0');
-        s++;
-    }
-    return v;
-}
-
 void *
 memset(void *dest, int c, size_t n) {
     char *p = dest;
@@ -33,16 +23,23 @@ static char newlines[] = {NEWLINES100 NEWLINES100};
 int
 main(int argc, char **argv) {
     int n;
+    char *s;
+
     if (UNLIKELY(argc < 2)) {
         return 1;
     }
 
-    n = atoi2(argv[1]);
+    n = 0;
+    s = argv[1];
+    while (*s >= '0' && *s <= '9') {
+        n = n*10 + (*s - '0');
+        s += 1;
+    }
     if (UNLIKELY(n <= 0)) {
         return 1;
     }
-    if (UNLIKELY(n > (int)(sizeof(newlines) - 1))) {
-        n = (int)(sizeof(newlines) - 1);
+    if (UNLIKELY(n > (int)(SIZEOF(newlines) - 1))) {
+        n = (int)(SIZEOF(newlines) - 1);
     }
 
     syscall3(SYS_write, STDOUT_FILENO, (long)newlines, n);
