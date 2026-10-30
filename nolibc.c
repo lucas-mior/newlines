@@ -104,7 +104,7 @@ strerror(int errnum) {
 }
 
 int
-strlen(char *str) {
+strlen32(char *str) {
     int len = 0;
 
     while (*str != '\0') {
@@ -1343,7 +1343,7 @@ main(void) {
 
         if (mmap_return_value < 0 && mmap_return_value > -4096) {
             char *message = strerror(-mmap_return_value);
-            int message_len = strlen(message);
+            int message_len = strlen32(message);
 
             write(STDOUT_FILENO, message, message_len + 1);
             fsync(STDOUT_FILENO);
