@@ -111,6 +111,26 @@ preconditions; assert those instead.
       return (int32)value;
   }
   ```
+- `MAXOF(expression)` and `MINOF(expression)` derive limits from the type of
+  an expression, without evaluating it. Use them with variables or function
+  calls so that the check follows changes to the variable or return type.
+  Never pass integer literals, including casted literals, to these macros.
+  A cast such as `MAXOF((int32)0)` repeats the type explicitly and defeats
+  the purpose of the macro. When the type is already known, use its named
+  limit (`INT32_MAX`, `INT32_MIN`, `INT64_MAX`, `INT64_MIN`, etc.).
+  ```c
+  // bad: repeating a type instead of using its named limit
+  if (n >= MAXOF((int32)0)) { /* ... */ }
+  if (n <= MINOF((int64)0)) { /* ... */ }
+
+  // good: known type, fixed limit
+  if (n >= INT32_MAX) { /* ... */ }
+  if (n <= INT64_MIN) { /* ... */ }
+
+  // good: bound follows the variable or function return type
+  if (n >= MAXOF(target_value)) { /* ... */ }
+  if (n <= MINOF(target_function())) { /* ... */ }
+  ```
 - unsigned integers: avoid, prefer signed integers
   * use unsigned integers for bit flags and other bit-wise operated values.
   * use unsigned for converting integers to and from enums.
@@ -577,7 +597,11 @@ str_itoa(&str, number);
 ```
 
 ## Avoid printf from libc.
-Instead, use `fmt_printf` from `fmt.c` which has almost the same semantics.
+Do not call libc `printf`-family functions directly in project code, including
+`printf`, `fprintf`, `sprintf`, `snprintf`, their `v` variants, and POSIX/GNU
+or wide-character variants. Instead, use `fmt_printf`, `fmt_snprintf`,
+or the appropriate `cbase` string/error-formatting wrappers. Direct libc calls
+are permitted inside `cbase/` to implement those wrappers.
 
 ## Comparing strings:
 In general, avoid `strcmp()`, use the alternatives below instead:
@@ -1388,3 +1412,27 @@ in `cbase/`, but not in any project main code (use the wrapper instead).
 
 If these guides miss some case, decide based on the files in `cbase/`. If you
 still do not know, use common sense.
+
+## Rounding to int64
+
+- Use `floor64(x)` instead of `(int64)floor(x)`.
+- Use `ceil64(x)` instead of `(int64)ceil(x)`.
+- Use `round64(x)` instead of `(int64)round(x)`.
+  These wrappers check whether the rounded result fits in `int64` when
+  debugging is enabled.
+
+## Integer literals in function and macro calls
+
+- Pass integer literals directly to functions and macros. Do not cast an
+  integer literal argument to `int32` or `int64`.
+  ```c
+  // bad
+  call_this_function(x, (int64)1);
+  MY_MACRO((int32)-2);
+
+  // good
+  call_this_function(x, 1);
+  MY_MACRO(-2);
+  ```
+  This applies to direct literal arguments, not casts in expressions or
+  casts of variables.

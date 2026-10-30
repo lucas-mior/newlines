@@ -49,6 +49,7 @@ CPPFLAGS="$CPPFLAGS -I$dir/cbase"
 CPPFLAGS="$CPPFLAGS -Dconst= -DNOLIBC=1"
 CFLAGS="$CFLAGS -fpermissive"
 CFLAGS_AMD64="$CFLAGS_AMD64 -nostdlib -static -fno-stack-protector"
+CFLAGS_AMD64="$CFLAGS_AMD64 -ffreestanding"
 CFLAGS_AMD64="$CFLAGS_AMD64 -fno-builtin"
 LDFLAGS="$LDFLAGS -lm"
 
