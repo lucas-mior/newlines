@@ -13,6 +13,7 @@ typedef unsigned int mode_t;
 typedef unsigned int uint;
 
 #define SIZEOF(...) ((long)sizeof(__VA_ARGS__))
+#define LENGTH(X) ((int)(sizeof(X)/sizeof(X[0])))
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 #define STDIN_FILENO 0
@@ -90,7 +91,7 @@ strerror(int errnum) {
     };
     int max_err;
 
-    max_err = SIZEOF(err_strs) / SIZEOF(err_strs[0]);
+    max_err = LENGTH(err_strs);
 
     if (errnum < 0) {
         return "Unknown error";
