@@ -13,7 +13,7 @@ typedef unsigned int mode_t;
 typedef unsigned int uint;
 
 #define SIZEOF(...) ((long)sizeof(__VA_ARGS__))
-#define LENGTH(X) ((int)(sizeof(X)/sizeof(X[0])))
+#define LENGTH(X) ((int)(SIZEOF(X)/SIZEOF(X[0])))
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 #define STDIN_FILENO 0
