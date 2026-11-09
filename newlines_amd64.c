@@ -1,6 +1,6 @@
 #include "nolibc.c"
 
-#if defined(__GNUC__) || defined(__INTEL_COMPILER) || defined(__clang__)
+#if CC_GCC || CC_CLANG || defined(__INTEL_COMPILER)
 #define UNLIKELY(x) __builtin_expect(x, 0)
 #else
 #define UNLIKELY(x) (x)
