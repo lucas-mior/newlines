@@ -89,9 +89,7 @@ strerror(int errnum) {
         "Numerical argument out of domain", /* 33 (EDOM) */
         "Numerical result out of range",    /* 34 (ERANGE) */
     };
-    int max_err;
-
-    max_err = LENGTH(err_strs);
+    int max_err = LENGTH(err_strs);
 
     if (errnum < 0) {
         return "Unknown error";
